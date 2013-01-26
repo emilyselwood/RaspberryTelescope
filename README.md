@@ -54,6 +54,16 @@ Why not just use a laptop and the software that comes with your camera? Well tha
 
 As yet I haven't tested this on the pi. So far it has only been running on my linux desktop, with a Cannon 550D There is a list of compatible cameras on the [gphoto2 website] (http://www.gphoto.org/doc/remote/)
 
+Project Structure
+-----------------
 
+The main function is in webserver.c along with all the code for dealing with the Mongoose webserver. There are three "services" 
+* /preview - generates a preview image (used for the live preview on the index page)
+* /capture - actually captures an image and returns it to the browser.
+* /summary - returns the summary information from the camera. This can be useful for debugging whats going on.
+
+telescopecamara.c / .h (yes I know) contains all the code for interfacing with the camera.
+
+mongoose.c / .h all the code for the mongoose web server.
 
 
