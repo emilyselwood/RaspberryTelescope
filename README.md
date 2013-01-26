@@ -38,9 +38,10 @@ Building
 --------
 Run make
 
-all : Builds every thing
-raspberrytelescope : Builds every thing at the moment.
-clean : clean
+Targets:
+* all : Builds every thing
+* raspberrytelescope : Builds every thing at the moment.
+* clean : clean
 
 At the moment there is one warning generated in the mongoose.c file about an int being cast to a pointer.
 
