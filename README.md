@@ -62,7 +62,7 @@ The main function is in webserver.c along with all the code for dealing with the
 * /capture - actually captures an image and returns it to the browser.
 * /summary - returns the summary information from the camera. This can be useful for debugging whats going on.
 
-telescopecamara.c / .h (yes I know) contains all the code for interfacing with the camera.
+telescopecamera.c / .h contains all the code for interfacing with the camera.
 
 mongoose.c / .h all the code for the mongoose web server.
 
