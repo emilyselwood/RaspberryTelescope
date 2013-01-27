@@ -5,7 +5,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "mongoose.h"
-#include "telescopecamara.h"
+#include "telescopecamera.h"
+#include "stringutils.h"
 
 #define SUMMARY_URL "/summary"
 #define SUMMARY_URL_LENGTH 8
@@ -17,17 +18,16 @@
 #define PREVIEW_URL_LENGTH 8 
 
 
-
 // helper to return short messages
-void *returnOkResult(struct mg_connection *conn, const int status, const char * content, const int content_length) {
+void *returnResult(struct mg_connection *conn, const int status, const char * statusMessage, const char * content, const int content_length) {
 	mg_printf(conn,
-            "HTTP/1.1 %d OK\r\n"
+            "HTTP/1.1 %d %s\r\n"
             "Content-Type: text/plain\r\n"
             "Content-Length: %d\r\n" // Always set Content-Length
 			"Cache-Control: no-store\n\n" // make sure the browser actually redownloads the image. safari is annoying.
             "\r\n"
             "%s",
-            status, content_length, content);
+            status, statusMessage, content_length, content);
 	return "";
 }
 
@@ -36,23 +36,42 @@ void *processSummary(struct mg_connection *conn, const struct mg_request_info *r
 	char content[4084];
 	int content_length = getCamaraSummary(content, sizeof(content));
 
-	return returnOkResult(conn, 200, content, content_length );
+	return returnResult(conn, 200, "OK", content, content_length );
 }
 
 void *processCapture(struct mg_connection *conn, const struct mg_request_info *request_info) {
+
 	printf("Capturing image\n");
-	const char * resultFileName = "result.jpg";
+
+	char queryParam[500];
+	size_t queryLength = nullSafeStrLen(request_info->query_string);
+
+	int res = mg_get_var(request_info->query_string, queryLength, "n", queryParam, 500);
+
+	char * resultFileName;
+	if(res > 0) {
+		printf("%s\n", queryParam);
+		// TODO: add validation here that file name is valid.
+		resultFileName = queryParam;
+	}
+	else if(res == -1) {	// key not found
+		resultFileName = "result.jpg";
+	}
+	else {
+		const char * message = "Name Parameter was too long.";
+		returnResult(conn, 400, message, message, strlen(message));
+		return "";
+	}
 
 	char outputPath[500];
-	sprintf(outputPath, "webRoot/%s", resultFileName);
+	sprintf(outputPath, "webRoot/img/%s", resultFileName);
 
-	if(takePicture(outputPath) ) {
-
+	if(takePicture(outputPath) > 0) {
 		mg_send_file(conn, outputPath);
 	}
 	else {
-		const char * message = "failed to capture image";
-		returnOkResult(conn, 503, "failed to capture image", strlen(message));
+		const char * message = "Failed to capture image";
+		returnResult(conn, 503, message, message, strlen(message));
 	}
 
 	return "";
@@ -60,18 +79,18 @@ void *processCapture(struct mg_connection *conn, const struct mg_request_info *r
 
 void *processPreview(struct mg_connection *conn, const struct mg_request_info *request_info) {
 	const char * resultFileName = "preview.jpg";
-	
+
 	char outputPath[500];
 	sprintf(outputPath, "/tmp/%s", resultFileName);
-	
+
 	if(capturePreview(outputPath) == 0) {
 		mg_send_file(conn, outputPath);
 	}
 	else {
-		const char * message = "failed to capture preview";
-		returnOkResult(conn, 503, "failed to capture preview", strlen(message));
+		const char * message = "Failed to capture preview";
+		returnResult(conn, 503, message, message, strlen(message));
 	}
-	
+
 	return "";
 }
 
@@ -103,24 +122,40 @@ static void *callback(enum mg_event event, struct mg_connection *conn) {
 }
 
 // signal handler so we actually get some idea where the hell this thing crashes.
-// very helpful with gphoto2 failing some time after a request has come through.
-void handler(int sig) {
-  void *array[20];
-  size_t size;
+// very helpful with gphoto2 being completely non thread safe.
+void bt_sighandler(int sig) {
 
-  // get void*'s for all entries on the stack
-  size = backtrace(array, 20);
+  void *trace[16];
+  char **messages = (char **)NULL;
+  int i, trace_size = 0;
 
-  // print out all the frames to stderr
-  fprintf(stderr, "Error: signal %d:\n", sig);
-  backtrace_symbols_fd(array, size, 2);
-  exit(1);
+  if (sig == SIGSEGV)
+    printf("Got signal %d\n", sig);
+  else
+    printf("Got signal %d\n", sig);
+
+  trace_size = backtrace(trace, 16);
+  /* overwrite sigaction with caller's address */
+
+  messages = backtrace_symbols(trace, trace_size);
+  /* skip first stack frame (points here) */
+  printf("[bt] Execution path:\n");
+  for (i=1; i<trace_size; ++i)
+  {
+    printf("[bt] #%d %s\n", i, messages[i]);
+
+    char syscom[256];
+    sprintf(syscom,"addr2line %p -e raspberrytelescope", trace[i]); //last parameter is the name of this app
+    system(syscom);
+  }
+
+  exit(0);
 }
 
 
 int main(void) {
 
-	signal(SIGSEGV, handler);   // install our handler
+	signal(SIGSEGV, bt_sighandler);   // install our handler
 
 	struct mg_context *ctx;
 	const char *options[] = {

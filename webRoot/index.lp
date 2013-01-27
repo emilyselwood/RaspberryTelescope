@@ -16,7 +16,7 @@
 </head>
 <body onload="setTimeout(updateImage, 1000);">
 <div class="menu">
-Menu woot <a href="/capture">Capture Now</a>
+<a href="/capture">Capture Now</a>
 </div>
 <div>
 	<img id="previewImage" src="/preview" />
