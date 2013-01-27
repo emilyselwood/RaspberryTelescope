@@ -34,8 +34,8 @@ At the top of the make file there is a path to where you downloaded and built lu
 
 This also uses Mongoose but the needed files are included here, the origional ones can be found here : https://github.com/valenok/mongoose
 
-Building
---------
+Building and Running
+--------------------
 Run make
 
 Targets:
@@ -44,6 +44,8 @@ Targets:
 * clean : clean
 
 At the moment there is one warning generated in the mongoose.c file about an int being cast to a pointer.
+
+Now simply run the executable raspberrytelescope. This will start the web server. Connect your camera and turn it on. In a web browser connect to http://localhost:8080/ and you should see the live preview from your camera. 
 
 Notes
 -----
@@ -57,13 +59,12 @@ As yet I haven't tested this on the pi. So far it has only been running on my li
 Project Structure
 -----------------
 
-The main function is in webserver.c along with all the code for dealing with the Mongoose webserver. There are three "services" 
-* /preview - generates a preview image (used for the live preview on the index page)
-* /capture - actually captures an image and returns it to the browser.
-* /summary - returns the summary information from the camera. This can be useful for debugging whats going on.
-
-telescopecamera.c / .h contains all the code for interfacing with the camera.
-
-mongoose.c / .h all the code for the mongoose web server.
+* webserver.c contains the main function along with all the code for dealing with the Mongoose webserver. There are three "services" 
+    * /preview - generates a preview image (used for the live preview on the index page)
+    * /capture - actually captures an image and returns it to the browser. Optional n query parameter to set the file name.
+    * /summary - returns the summary information from the camera. This can be useful for debugging whats going on.
+* telescopecamera.c / .h contains all the code for interfacing with the camera.
+* stringutils.c / .h some string helper functions.
+* mongoose.c / .h all the code for the mongoose web server.
 
 
