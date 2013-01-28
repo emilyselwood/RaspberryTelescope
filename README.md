@@ -61,10 +61,15 @@ Project Structure
 
 * webserver.c contains the main function along with all the code for dealing with the Mongoose webserver. There are three "services" 
     * /preview - generates a preview image (used for the live preview on the index page)
-    * /capture - actually captures an image and returns it to the browser. Optional n query parameter to set the file name.
+    * /capture - actually captures an image and returns it to the browser.
     * /summary - returns the summary information from the camera. This can be useful for debugging whats going on.
 * telescopecamera.c / .h contains all the code for interfacing with the camera.
 * stringutils.c / .h some string helper functions.
 * mongoose.c / .h all the code for the mongoose web server.
+
+The /capture service takes several query parameters:
+* n=[filename] this alows you to pass the name to save the picture with.
+* r=[0|1] return the file to the user or not. If 1 returns the file to the user. if not it doesn't and just saves it in the webRoot/img/ directory
+
 
 
