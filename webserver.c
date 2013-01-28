@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include "mongoose.h"
 #include "telescopecamera.h"
 #include "stringutils.h"
@@ -54,8 +55,11 @@ void *processCapture(struct mg_connection *conn, const struct mg_request_info *r
 		// TODO: add validation here that file name is valid.
 		resultFileName = queryParam;
 	}
-	else if(res == -1) {	// key not found
-		resultFileName = "result.jpg";
+	else if(res == -1) {	// key not found, generate a file name using the current date.
+		char timeStampedName[19];
+		time_t t = time(NULL);
+		strftime(timeStampedName, 19, "%Y%m%d%H%M%S.jpg", localtime(&t));
+		resultFileName = timeStampedName;
 	}
 	else {
 		const char * message = "Name Parameter was too long.";
@@ -125,31 +129,27 @@ static void *callback(enum mg_event event, struct mg_connection *conn) {
 // very helpful with gphoto2 being completely non thread safe.
 void bt_sighandler(int sig) {
 
-  void *trace[16];
-  char **messages = (char **)NULL;
-  int i, trace_size = 0;
+	void *trace[16];
+	char **messages = (char **)NULL;
+	int i, trace_size = 0;
 
-  if (sig == SIGSEGV)
-    printf("Got signal %d\n", sig);
-  else
-    printf("Got signal %d\n", sig);
+	printf("Got signal %d\n", sig);
 
-  trace_size = backtrace(trace, 16);
-  /* overwrite sigaction with caller's address */
+	trace_size = backtrace(trace, 16);
 
-  messages = backtrace_symbols(trace, trace_size);
-  /* skip first stack frame (points here) */
-  printf("[bt] Execution path:\n");
-  for (i=1; i<trace_size; ++i)
-  {
-    printf("[bt] #%d %s\n", i, messages[i]);
+	messages = backtrace_symbols(trace, trace_size);
+	/* skip first stack frame (points here) */
+	printf("[bt] Execution path:\n");
+	for (i=1; i<trace_size; ++i)
+	{
+		printf("[bt] #%d %s\n", i, messages[i]);
 
-    char syscom[256];
-    sprintf(syscom,"addr2line %p -e raspberrytelescope", trace[i]); //last parameter is the name of this app
-    system(syscom);
-  }
+		char syscom[256];
+		sprintf(syscom,"addr2line %p -e raspberrytelescope", trace[i]); //last parameter is the name of this app
+		system(syscom);
+	}
 
-  exit(0);
+	exit(0);
 }
 
 
