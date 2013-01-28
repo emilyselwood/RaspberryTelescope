@@ -1,6 +1,7 @@
 <html>
 <head>
 	<title>Raspberry Telescope</title>
+	<link href="style.css" rel="stylesheet" type="text/css" />
 	<script>
 	
 		function updateImage()
