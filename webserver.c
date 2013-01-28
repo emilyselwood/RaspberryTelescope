@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <stdbool.h>
 #include "mongoose.h"
 #include "telescopecamera.h"
 #include "stringutils.h"
@@ -66,12 +67,28 @@ void *processCapture(struct mg_connection *conn, const struct mg_request_info *r
 		returnResult(conn, 400, message, message, strlen(message));
 		return "";
 	}
+	
+	bool shouldSendBack = false;
+	res = mg_get_var(request_info->query_string, queryLength, "r", queryParam, 500);
+	if(res > 0) {
+		shouldSendBack = (queryParam[0] == '1');
+	}
 
 	char outputPath[500];
 	sprintf(outputPath, "webRoot/img/%s", resultFileName);
 
 	if(takePicture(outputPath) > 0) {
-		mg_send_file(conn, outputPath);
+		if(shouldSendBack) {
+			mg_send_file(conn, outputPath);
+		}
+		else {
+			mg_printf(conn,
+				"HTTP/1.1 307 Temporary Redirect\r\n"
+				"Location: /\r\n"
+				"content_length: 0\r\n"
+				"Content-Type: text/html\r\n\r\n"
+			);
+		}
 	}
 	else {
 		const char * message = "Failed to capture image";
