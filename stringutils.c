@@ -1,6 +1,7 @@
 #include "stringutils.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 size_t nullSafeStrLen(const char * string) {
 	if(string == NULL) {
@@ -10,3 +11,34 @@ size_t nullSafeStrLen(const char * string) {
 		return strlen(string);
 	}
 }
+
+bool extractBoolQueryParam(const struct mg_request_info *request_info, const char * paramKey) {
+	return extractBoolQueryParamDefault(request_info, paramKey, false);
+}
+
+bool extractBoolQueryParamDefault(const struct mg_request_info *request_info, const char * paramKey, const bool def) {
+	char queryParam[10];
+	size_t queryLength = nullSafeStrLen(request_info->query_string);
+	int res = mg_get_var(request_info->query_string, queryLength, paramKey, queryParam, 10);
+	if(res > 0) {
+		return (queryParam[0] == '1');
+	}
+	return def;
+}
+
+int extractStringQueryParam(const struct mg_request_info *request_info, const char * paramKey, char * buffer, const int length) {
+	size_t queryLength = nullSafeStrLen(request_info->query_string);
+
+	return mg_get_var(request_info->query_string, queryLength, "n", buffer, length);
+}
+
+int extractStringQueryParamDefault(const struct mg_request_info *request_info, const char * paramKey, const char * def, char * buffer, const int length) {
+	int res = extractStringQueryParam(request_info, paramKey, buffer, length);
+	
+	if( res < 0 ) {
+		strncpy(buffer, def, length);
+		return strlen(def);
+	}
+	return res;
+}
+

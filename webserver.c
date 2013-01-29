@@ -45,34 +45,14 @@ void *processCapture(struct mg_connection *conn, const struct mg_request_info *r
 
 	printf("Capturing image\n");
 
-	char queryParam[500];
-	size_t queryLength = nullSafeStrLen(request_info->query_string);
-
-	int res = mg_get_var(request_info->query_string, queryLength, "n", queryParam, 500);
-
-	char * resultFileName;
-	if(res > 0) {
-		printf("%s\n", queryParam);
-		// TODO: add validation here that file name is valid.
-		resultFileName = queryParam;
-	}
-	else if(res == -1) {	// key not found, generate a file name using the current date.
-		char timeStampedName[19];
-		time_t t = time(NULL);
-		strftime(timeStampedName, 19, "%Y%m%d%H%M%S.jpg", localtime(&t));
-		resultFileName = timeStampedName;
-	}
-	else {
-		const char * message = "Name Parameter was too long.";
-		returnResult(conn, 400, message, message, strlen(message));
-		return "";
-	}
+	char resultFileName[500];
 	
-	bool shouldSendBack = false;
-	res = mg_get_var(request_info->query_string, queryLength, "r", queryParam, 500);
-	if(res > 0) {
-		shouldSendBack = (queryParam[0] == '1');
-	}
+	char timeStampedName[19];
+	time_t t = time(NULL);
+	strftime(timeStampedName, 19, "%Y%m%d%H%M%S.jpg", localtime(&t));
+	extractStringQueryParamDefault(request_info, "n", timeStampedName, resultFileName, 500);
+	
+	bool shouldSendBack = extractBoolQueryParam(request_info, "r");
 
 	char outputPath[500];
 	sprintf(outputPath, "webRoot/img/%s", resultFileName);
