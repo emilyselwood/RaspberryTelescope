@@ -20,14 +20,13 @@ Roadmap
 * Capture video
 
 
-
 Building and Running
 --------------------
 
 To get started on a Raspbery PI you will need to run the following commands in squence. This assumes you are in the home directory of a fresh wheezy-raspbian distro. 
 
     sudo apt-get update
-    sudo apt-get install git libgphoto2-2-dev libreadline-dev libncurses-dev
+    sudo apt-get install git libgphoto2-2-dev libconfig-dev libreadline-dev libncurses-dev
     git clone git://github.com/wselwood/RaspberryTelescope.git
     cd RaspberryTelescope
     wget http://www.lua.org/ftp/lua-5.2.1.tar.gz -O lua-5.2.1.tar.gz
@@ -54,9 +53,9 @@ To run the web server simply execude the raspberrytelescope command. To exit pre
 Depencies
 ---------
 
-We need lua and libgphoto2
+We need lua, libgphoto2 and libconfig
 
-libgphoto2 can be got from you favourte package manager.
+libgphoto2 and libconfig can be got from you favourte package manager.
 
 lua can be got from www.lua.org/ftp/ Ive used version 5.2.1 Download and compile. You may need to install libncurses and libreadline
 
