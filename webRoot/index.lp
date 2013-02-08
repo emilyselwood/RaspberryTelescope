@@ -3,6 +3,7 @@
 	<title>Raspberry Telescope</title>
 	<link href="style.css" rel="stylesheet" type="text/css" />
 	<script>
+		tickTime = new Date();
 	
 		function updateImage()
 		{
@@ -11,13 +12,18 @@
 				image.src="/preview#" + new Date().getTime();
 			}
 			setTimeout(updateImage, 500);
+			
+			var endTime = new Date();
+			
+			document.getElementById("tick").innerHTML = "" + (endTime.getTime() - tickTime.getTime())
+			tickTime = endTime;
 		}
 	
 	</script>
 </head>
 <body onload="setTimeout(updateImage, 1000);">
 <div class="menu">
-<a href="/capture">Capture Now</a>
+<a href="/capture">Capture Now</a><p id="tick"></p>
 </div>
 <div>
 	<img id="previewImage" src="/preview" />
