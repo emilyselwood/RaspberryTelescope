@@ -10,13 +10,14 @@
 			var image = document.getElementById("previewImage");
 			if(image.complete) {
 				image.src="/preview#" + new Date().getTime();
+				
+				var endTime = new Date();
+			
+				document.getElementById("tick").innerHTML = "" + (endTime.getTime() - tickTime.getTime())
+				tickTime = endTime;
 			}
-			setTimeout(updateImage, 500);
-			
-			var endTime = new Date();
-			
-			document.getElementById("tick").innerHTML = "" + (endTime.getTime() - tickTime.getTime())
-			tickTime = endTime;
+			setTimeout(updateImage, 100);
+
 		}
 	
 	</script>
