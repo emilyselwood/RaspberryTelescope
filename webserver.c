@@ -6,6 +6,8 @@
 #include <string.h>
 #include <time.h>
 #include <stdbool.h>
+#include <libconfig.h>
+
 #include "mongoose.h"
 #include "telescopecamera.h"
 #include "stringutils.h"
@@ -19,6 +21,8 @@
 #define PREVIEW_URL "/preview"
 #define PREVIEW_URL_LENGTH 8 
 
+// global configuration as this will be accessed in the call backs.
+config_t cfg;
 
 // helper to return short messages
 void *returnResult(struct mg_connection *conn, const int status, const char * statusMessage, const char * content, const int content_length) {
@@ -81,8 +85,11 @@ void *processCapture(struct mg_connection *conn, const struct mg_request_info *r
 void *processPreview(struct mg_connection *conn, const struct mg_request_info *request_info) {
 	const char * resultFileName = "preview.jpg";
 
+	const char *path;
+	config_lookup_string(&cfg, "capture.preview_path", &path);
+	
 	char outputPath[500];
-	sprintf(outputPath, "/tmp/%s", resultFileName);
+	sprintf(outputPath, "%s/%s", path, resultFileName);
 
 	if(capturePreview(outputPath) == 0) {
 		mg_send_file(conn, outputPath);
@@ -154,9 +161,23 @@ int main(void) {
 
 	signal(SIGSEGV, bt_sighandler);   // install our handler
 
+	config_init(&cfg);
+
+	/* Read the file. If there is an error, report it and exit. */
+	if(! config_read_file(&cfg, "config.cfg"))
+	{
+		fprintf(stderr, "Error reading config file:\nLine %d - %s\n", //config_error_file(&cfg),
+				config_error_line(&cfg), config_error_text(&cfg));
+		config_destroy(&cfg);
+		return -1;
+	}
+
+	const char *port;
+	config_lookup_string(&cfg, "webserver.port", &port);
+	
 	struct mg_context *ctx;
 	const char *options[] = {
-		"listening_ports", "8080",
+		"listening_ports", port, //"8080",
 		"document_root", "./webRoot",
 		"index_files", "index.lp,index.html,index.htm",
 		"enable_directory_listing", "no",
@@ -170,6 +191,6 @@ int main(void) {
 
 	// make sure we reset the camara.
 	resetCamera();
-	
+	config_destroy(&cfg);
 	return 0;
 }
