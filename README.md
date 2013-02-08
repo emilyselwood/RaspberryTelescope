@@ -40,7 +40,7 @@ To get started on a Raspbery PI you will need to run the following commands in s
     
 Connect your camera and turn it on. In a web browser connect to http://raspberrypi:8080/ and you should see the live preview from your camera. 
 
-On a pi the live preview can be pretty slow and not exactly live. I think a faster memory card will probably help.
+On a pi the live preview can be pretty slow and not exactly live. I think a faster memory card will probably help, or a configuration system that allows for the preview images to be writen to a ram disk.
 
 Make Targets:
 * all : Builds every thing
@@ -58,12 +58,9 @@ We need lua and libgphoto2
 
 libgphoto2 can be got from you favourte package manager.
 
-lua can be got from www.lua.org/ftp/ Ive used version 5.2.1
-Download and compile. 
+lua can be got from www.lua.org/ftp/ Ive used version 5.2.1 Download and compile. You may need to install libncurses and libreadline
+
 At the top of the make file there is a path to where you downloaded and built lua. Defaults to "lua-5.2.1/"
-`wget http://www.lua.org/ftp/lua-5.2.1.tar.gz -O lua-5.2.1.tar.gz`
-`tar xvzf lua-5.2.1.tar.gz`
-`make linux`
 
 This also uses Mongoose but the needed files are included here, the origional ones can be found here : https://github.com/valenok/mongoose
 
