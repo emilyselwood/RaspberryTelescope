@@ -1,18 +1,17 @@
 <!doctype html>
 <?
-	function findNameParam(request)
-		print('hello')
-		local start = string.find(request, 'n=')
+	function findParam(request, param)
+		local start = string.find(request, param) + 2
 		if not start
 		then
-			return '""'
+			return '\"\"'
 		else
-			local end = string.find(request, '&', start)
-			if not end
+			local param_end = string.find(request, '&', start)
+			if not param_end
 			then 
 				return string.sub(request, start)
 			else
-				return string.sub(request, start, end)
+				return string.sub(request, start, param_end - 1)
 			end
 		end
 	end
@@ -127,21 +126,7 @@
 <div id="captureOptions">
 	<div><label for="immediatSetting">Show image immediately</label><input type="checkbox" id="immediatSetting" <? if string.find(request_info.query_string, 'r=1') then print('checked=\"checked\"') end ?>/></div>
 	<div><label for="immediatSetting">Delete from camera</label><input type="checkbox" id="deleteSetting" <? if string.find(request_info.query_string, 'd=1') then print('checked=\"checked\"') end ?>/></div>
-	<div><label for="captureName">File Name:</label><input type="text" <?
-		local start = string.find(request_info.query_string, 'n=')
-		if not start
-		then
-			print( 'value=\"\"' )
-		else
-			local param_end = string.find(request_info.query_string, '&', start + 1)
-			if not param_end
-			then 
-				print( 'value=', string.sub(request_info.query_string, start + 2) )
-			else
-				print( 'value=', string.sub(request_info.query_string, start + 2, param_end - 1) )
-			end
-		end
-	?> id="captureName" />Warning if the file already exists it will be overwritten. Leave blank for a date stamped file name.</div>
+	<div><label for="captureName">File Name:</label><input type="text" <? print('value=', findParam(request_info.query_string, 'n=')) ?> id="captureName" />Warning if the file already exists it will be overwritten. Leave blank for a date stamped file name.</div>
 </div>
 <div id="cameraOptions">
 	<p>This is where the camera options will go. Things like ISO and exposure time.</p>
