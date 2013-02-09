@@ -8,12 +8,12 @@ Features
 
 * Live preview
 * Remote Triggering
+* Capture to server or return immedatly to browser
 * Controlled through a web browser.
 
 Roadmap
 -------
 
-* Capture to server
 * Browse captured images
 * Adjust Camera settings (iso, shutter speed, etc)
 * Time laps 
@@ -61,7 +61,12 @@ lua can be got from www.lua.org/ftp/ Ive used version 5.2.1 Download and compile
 
 At the top of the make file there is a path to where you downloaded and built lua. Defaults to "lua-5.2.1/"
 
-This also uses Mongoose but the needed files are included here, the origional ones can be found here : https://github.com/valenok/mongoose
+This also uses Mongoose and JQuery-UI but the needed files are included here. 
+
+* The origional Mongoose files can be found here : https://github.com/valenok/mongoose
+* The origional JQuery-UI files can be found at http://jqueryui.com
+
+The JQuery files are included in the build rather than pulled from the internet as this needs to work with out an internet connection, for instance where the Pi is working as a wi-fi hot spot.
 
 Notes
 -----
