@@ -15,7 +15,7 @@ int getCamaraSummary(char * content, int sizeOfContent);
  * Saves the picture to the local disk with the fileName provided.
  * deletes the copy of the picture on the camera
  */
-int takePicture(char * fileName);
+int takePicture(char * fileName, bool deleteFromCamera);
 
 /**
  * Captures a preview frame. Saves to the provided fileName/

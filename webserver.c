@@ -57,11 +57,12 @@ void *processCapture(struct mg_connection *conn, const struct mg_request_info *r
 	extractStringQueryParamDefault(request_info, "n", timeStampedName, resultFileName, 500);
 
 	bool shouldSendBack = extractBoolQueryParam(request_info, "r");
+	bool shouldDelete = extractBoolQueryParam(request_info, "d");
 
 	char outputPath[500];
 	sprintf(outputPath, "webRoot/img/%s", resultFileName);
 
-	if(takePicture(outputPath) > 0) {
+	if(takePicture(outputPath, shouldDelete) > 0) {
 		if(shouldSendBack) {
 			mg_send_file(conn, outputPath);
 		}

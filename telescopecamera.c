@@ -3,6 +3,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <pthread.h>
 #include "telescopecamera.h"
 
 
@@ -13,6 +14,7 @@ bool initFailed = false;
 bool resetNextTime = false;
 
 int crudeLock = 0;
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 // error logging function for things failing in the gphoto2 library.
 // NOTE : Do not try and reset the camera in here. It will cause seg faults.
@@ -137,24 +139,15 @@ void resetCamera() {
 	gp_camera_exit(camera, context);
 	gp_camera_free (camera);
 
+	
+
 	camera = NULL;
 	context = NULL;
 }
 
-// really really crude locking to stop us trying to either take two pictures at once or generate a preview and capture an image.
-// TODO: Make this entire file use some kind of actual atomic lock.
-bool reallyCrudeLock() {
-	int count = 0;
-	while(crudeLock && count < 10) {
-		sleep(10);
-	}
-	if(count == 10) {
-		return false;
-	}
-	else {
-		crudeLock++;
-	}
-	
+// handle creation of the lock if it doesn't exist.
+bool getLock() {
+	pthread_mutex_lock(&lock);
 	return true;
 }
 
@@ -189,17 +182,17 @@ int getCamaraSummary(char * content, const int sizeOfContent) {
 	return content_length;
 }
 
-int takePicture(char * fileName) {
+int takePicture(char * fileName, bool deleteFromCamera) {
 
 	// really really crude locking to stop us trying to either take two pictures at once or generate a preview and capture an image.
-	if(!reallyCrudeLock()) {
+	if(!getLock()) {
 		return -1;
 	}
 	
 	initCamaraAndContext();
 
 	if( initFailed ) {
-		crudeLock--;
+		pthread_mutex_unlock(&lock);
 		return -1;
 	}
 	else {
@@ -216,10 +209,12 @@ int takePicture(char * fileName) {
 		gp_file_new_from_fd(&canonfile, fd);
 		gp_camera_file_get(camera, camera_file_path.folder, camera_file_path.name, GP_FILE_TYPE_NORMAL, canonfile, context);
 
-		gp_camera_file_delete(camera, camera_file_path.folder, camera_file_path.name, context);
+		if(deleteFromCamera) {
+			gp_camera_file_delete(camera, camera_file_path.folder, camera_file_path.name, context);
+		}
 
 		gp_file_free(canonfile);
-		crudeLock--;
+		pthread_mutex_unlock(&lock);
 		return fd;
 	}
 }
@@ -229,14 +224,14 @@ int takePicture(char * fileName) {
 int capturePreview(char * fileName) {
 
 	// really really crude locking to stop us trying to either take two pictures at once or generate a preview and capture an image.
-	if(!reallyCrudeLock()) {
+	if(!getLock()) {
 		return -1;
 	}
 	
 	initCamaraAndContext();
 	
 	if( initFailed ) {
-		crudeLock--;
+		pthread_mutex_unlock(&lock);
 		return -1;
 	}
 	else {
@@ -246,7 +241,7 @@ int capturePreview(char * fileName) {
 		if (retval != GP_OK) {
 			fprintf(stderr,"gp_file_new: %d\n", retval);
 			resetCamera();
-			crudeLock--;
+			pthread_mutex_unlock(&lock);
 			return -1;
 		}
 
@@ -254,7 +249,7 @@ int capturePreview(char * fileName) {
 		if (retval != GP_OK) {
 			fprintf(stderr,"gp_camera_capture_preview: %d\n", retval);
 			resetNextTime = true;
-			crudeLock--;
+			pthread_mutex_unlock(&lock);
 			return -1;
 		}
 
@@ -262,12 +257,12 @@ int capturePreview(char * fileName) {
 		if (retval != GP_OK) {
 			fprintf(stderr,"gp_file_save: %d\n", retval);
 			gp_file_unref(file);
-			crudeLock--;
 			resetCamera();
+			pthread_mutex_unlock(&lock);
 			return -1;
 		}
 		gp_file_unref(file);
-		crudeLock--;
+		pthread_mutex_unlock(&lock);
 		return 0;
 	}
 }

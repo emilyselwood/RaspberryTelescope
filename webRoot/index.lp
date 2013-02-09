@@ -39,8 +39,12 @@
 			if(fileName != "") {
 				fileName = "&n=" + fileName
 			}
+			var deleteValue = "&d=0"
+			if($("#deleteSetting").is(":checked")) {
+				deleteValue = "&d=1"
+			}
 			
-			window.location.href = "/capture?" + returnValue + fileName;
+			window.location.href = "/capture?" + returnValue + fileName + deleteValue;
 		}
 		
 		function optionsButtonClick() {
@@ -104,6 +108,7 @@
 </div>
 <div id="captureOptions">
 	<div><label for="immediatSetting">Show image immediately</label><input type="checkbox" id="immediatSetting" /></div>
+	<div><label for="immediatSetting">Delete from camera</label><input type="checkbox" id="deleteSetting" /></div>
 	<div><label for="captureName">File Name:</label><input type="text" id="captureName" />Warning if the file already exists it will be overwritten. Leave blank for a date stamped file name.</div>
 </div>
 <div id="cameraOptions">
