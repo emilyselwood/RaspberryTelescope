@@ -19,7 +19,7 @@
 #define CAPTURE_URL_LENGTH 8
 
 #define PREVIEW_URL "/preview"
-#define PREVIEW_URL_LENGTH 8 
+#define PREVIEW_URL_LENGTH 8
 
 // global configuration as this will be accessed in the call backs.
 config_t cfg;
@@ -50,12 +50,12 @@ void *processCapture(struct mg_connection *conn, const struct mg_request_info *r
 	printf("Capturing image\n");
 
 	char resultFileName[500];
-	
+
 	char timeStampedName[19];
 	time_t t = time(NULL);
 	strftime(timeStampedName, 19, "%Y%m%d%H%M%S.jpg", localtime(&t));
 	extractStringQueryParamDefault(request_info, "n", timeStampedName, resultFileName, 500);
-	
+
 	bool shouldSendBack = extractBoolQueryParam(request_info, "r");
 
 	char outputPath[500];
@@ -87,7 +87,7 @@ void *processPreview(struct mg_connection *conn, const struct mg_request_info *r
 
 	const char *path;
 	config_lookup_string(&cfg, "capture.preview_path", &path);
-	
+
 	char outputPath[500];
 	sprintf(outputPath, "%s/%s", path, resultFileName);
 
@@ -166,7 +166,7 @@ int main(void) {
 	/* Read the file. If there is an error, report it and exit. */
 	if(! config_read_file(&cfg, "config.cfg"))
 	{
-		fprintf(stderr, "Error reading config file:\nLine %d - %s\n", //config_error_file(&cfg),
+		fprintf(stderr, "Error reading config file:\nLine %d - %s\n",
 				config_error_line(&cfg), config_error_text(&cfg));
 		config_destroy(&cfg);
 		return -1;

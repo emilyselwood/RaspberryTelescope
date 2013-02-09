@@ -1,11 +1,15 @@
 body {
 	background:black;
 	margin:5px;
+	color:white;
 }
 
 a {
 	color:deepskyblue;
 }
-p {
-	color:white;
+
+#captureOptions { margin-top: 2em; }
+
+.menu {
+	margin : 1em;
 }
