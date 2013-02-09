@@ -35,8 +35,12 @@
 			else {
 				returnValue = "r=0"
 			}
+			var fileName = $.trim($("#captureName").val())
+			if(fileName != "") {
+				fileName = "&n=" + fileName
+			}
 			
-			window.location.href = "/capture?" + returnValue;
+			window.location.href = "/capture?" + returnValue + fileName;
 		}
 		
 		function optionsButtonClick() {
@@ -99,7 +103,8 @@
 	<img id="previewImage" src="/preview" />
 </div>
 <div id="captureOptions">
-	<input type="checkbox" id="immediatSetting" /><label for="immediatSetting">Show image immediately</label>
+	<div><label for="immediatSetting">Show image immediately</label><input type="checkbox" id="immediatSetting" /></div>
+	<div><label for="captureName">File Name:</label><input type="text" id="captureName" />Warning if the file already exists it will be overwritten. Leave blank for a date stamped file name.</div>
 </div>
 <div id="cameraOptions">
 	<p>This is where the camera options will go. Things like ISO and exposure time.</p>
