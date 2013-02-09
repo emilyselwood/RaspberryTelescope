@@ -1,4 +1,22 @@
 <!doctype html>
+<?
+	function findNameParam(request)
+		print('hello')
+		local start = string.find(request, 'n=')
+		if not start
+		then
+			return '""'
+		else
+			local end = string.find(request, '&', start)
+			if not end
+			then 
+				return string.sub(request, start)
+			else
+				return string.sub(request, start, end)
+			end
+		end
+	end
+?>
 <html>
 <head>
 	<meta charset="utf-8">
@@ -107,9 +125,23 @@
 	<img id="previewImage" src="/preview" />
 </div>
 <div id="captureOptions">
-	<div><label for="immediatSetting">Show image immediately</label><input type="checkbox" id="immediatSetting" /></div>
-	<div><label for="immediatSetting">Delete from camera</label><input type="checkbox" id="deleteSetting" /></div>
-	<div><label for="captureName">File Name:</label><input type="text" id="captureName" />Warning if the file already exists it will be overwritten. Leave blank for a date stamped file name.</div>
+	<div><label for="immediatSetting">Show image immediately</label><input type="checkbox" id="immediatSetting" <? if string.find(request_info.query_string, 'r=1') then print('checked=\"checked\"') end ?>/></div>
+	<div><label for="immediatSetting">Delete from camera</label><input type="checkbox" id="deleteSetting" <? if string.find(request_info.query_string, 'd=1') then print('checked=\"checked\"') end ?>/></div>
+	<div><label for="captureName">File Name:</label><input type="text" <?
+		local start = string.find(request_info.query_string, 'n=')
+		if not start
+		then
+			print( 'value=\"\"' )
+		else
+			local param_end = string.find(request_info.query_string, '&', start + 1)
+			if not param_end
+			then 
+				print( 'value=', string.sub(request_info.query_string, start + 2) )
+			else
+				print( 'value=', string.sub(request_info.query_string, start + 2, param_end - 1) )
+			end
+		end
+	?> id="captureName" />Warning if the file already exists it will be overwritten. Leave blank for a date stamped file name.</div>
 </div>
 <div id="cameraOptions">
 	<p>This is where the camera options will go. Things like ISO and exposure time.</p>

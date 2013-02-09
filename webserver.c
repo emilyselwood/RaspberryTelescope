@@ -69,9 +69,10 @@ void *processCapture(struct mg_connection *conn, const struct mg_request_info *r
 		else {
 			mg_printf(conn,
 				"HTTP/1.1 307 Temporary Redirect\r\n"
-				"Location: /\r\n"
+				"Location: /?%s\r\n"
 				"content_length: 0\r\n"
-				"Content-Type: text/html\r\n\r\n"
+				"Content-Type: text/html\r\n\r\n",
+				request_info->query_string 
 			);
 		}
 	}
