@@ -8,6 +8,7 @@ Features
 
 * Live preview
 * Remote Triggering
+* Adjust Camera settings (iso, shutter speed, etc)
 * Capture to server or return immedatly to browser
 * Controlled through a web browser.
 
@@ -15,7 +16,6 @@ Roadmap
 -------
 
 * Browse captured images
-* Adjust Camera settings (iso, shutter speed, etc)
 * Time laps 
 * Capture video
 
@@ -89,6 +89,7 @@ Project Structure
     * /capture - actually captures an image and returns it to the browser.
     * /summary - returns the summary information from the camera. This can be useful for debugging whats going on.
     * /settings - returns a JSON feed of the settings currently in the camera.
+    * /setsetting - takes a key and value and updates a setting on the camera.
 * telescopecamera.c / .h contains all the code for interfacing with the camera.
 * stringutils.c / .h some string helper functions.
 * mongoose.c / .h all the code for the mongoose web server.
@@ -96,6 +97,10 @@ Project Structure
 The /capture service takes several query parameters:
 * n=[filename] this alows you to pass the name to save the picture with.
 * r=[0|1] return the file to the user or not. If 1 returns the file to the user. if not it doesn't and just saves it in the webRoot/img/ directory
+
+The /setsetting service takes two query parameters:
+* k=[setting name] this is the name of the setting you want to update.
+* v=[new value] this is the new value for the setting you want to update.
 
 
 
