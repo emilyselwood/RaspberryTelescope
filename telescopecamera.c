@@ -31,7 +31,7 @@ static void ctx_status_func (GPContext *context, const char *str, void *data)
 	fflush(stderr);
 }
 
-/*
+	/*
 	* This function looks up a label or key entry of
 	* a configuration widget.
 	* The functions descend recursively, so you can just
@@ -56,7 +56,7 @@ int getWidget(CameraWidget ** widget, CameraWidget ** child, const char * settin
 
 	ret = _lookup_widget (*widget, setting, child);
 	if (ret < GP_OK || child == NULL) {
-		fprintf (stderr, "l lookup widget failed: %d\n", ret);
+		fprintf (stderr, "l lookup widget %s failed: %d\n", setting, ret);
 		gp_widget_free (*widget);
 		return ret;
 	}
@@ -206,10 +206,7 @@ int getCamaraSummary(char * content, const int sizeOfContent) {
 
 int takePicture(char * fileName, bool deleteFromCamera) {
 
-	// really really crude locking to stop us trying to either take two pictures at once or generate a preview and capture an image.
-	if(!getLock()) {
-		return -1;
-	}
+	pthread_mutex_lock(&lock);
 	
 	initCamaraAndContext();
 
@@ -245,10 +242,7 @@ int takePicture(char * fileName, bool deleteFromCamera) {
 
 int capturePreview(char * fileName) {
 
-	// really really crude locking to stop us trying to either take two pictures at once or generate a preview and capture an image.
-	if(!getLock()) {
-		return -1;
-	}
+	pthread_mutex_lock(&lock);
 	
 	initCamaraAndContext();
 	
@@ -291,9 +285,12 @@ int capturePreview(char * fileName) {
 
 int getSetting(const char * setting, char * result, size_t resultLength) {
 
+	pthread_mutex_lock(&lock);
+	
 	initCamaraAndContext();
 	
 	if( initFailed ) {
+		pthread_mutex_unlock(&lock);
 		return -1;
 	}
 	else {
@@ -304,6 +301,7 @@ int getSetting(const char * setting, char * result, size_t resultLength) {
 		if (ret < GP_OK) {
 			fprintf (stderr, "camera_get_config failed: %d\n", ret);
 			gp_widget_free (widget);
+			pthread_mutex_unlock(&lock);
 			return ret;
 		}
 
@@ -314,6 +312,7 @@ int getSetting(const char * setting, char * result, size_t resultLength) {
 		if (ret < GP_OK) {
 			fprintf (stderr, "could not query widget value: %d\n", ret);
 			gp_widget_free (widget);
+			pthread_mutex_unlock(&lock);
 			return ret;
 		}
 
@@ -321,14 +320,18 @@ int getSetting(const char * setting, char * result, size_t resultLength) {
 		snprintf(result, resultLength, "%s", val);
 
 		gp_widget_free (widget);
+		pthread_mutex_unlock(&lock);
 		return ret;
 	}
 }
 
 int setSetting(const char * setting, const char * newValue) {
+	
+	pthread_mutex_lock(&lock);
 	initCamaraAndContext();
 
 	if( initFailed ) {
+		pthread_mutex_unlock(&lock);
 		return -1;
 	}
 	else {
@@ -338,6 +341,7 @@ int setSetting(const char * setting, const char * newValue) {
 		int ret = getWidget(&widget, &child, setting);
 		if (ret < GP_OK) {
 			fprintf (stderr, "camera_get_config failed: %d\n", ret);
+			pthread_mutex_unlock(&lock);
 			return ret;
 		}
 		
@@ -345,6 +349,7 @@ int setSetting(const char * setting, const char * newValue) {
 		if (ret < GP_OK) {
 			fprintf (stderr, "could not set widget value: %d\n", ret);
 			gp_widget_free (widget);
+			pthread_mutex_unlock(&lock);
 			return ret;
 		}
 		
@@ -353,20 +358,22 @@ int setSetting(const char * setting, const char * newValue) {
 		if (ret < GP_OK) {
 			fprintf (stderr, "camera_set_config failed: %d\n", ret);
 			gp_widget_free (widget);
+			pthread_mutex_unlock(&lock);
 			return ret;
 		}
 		
 		gp_widget_free (widget);
+		pthread_mutex_unlock(&lock);
 		return 0;
 	}
 }
 
-
-
 int enumerateSettings(FILE * outputStream) {
+	pthread_mutex_lock(&lock);
 	initCamaraAndContext();
 
 	if( initFailed ) {
+		pthread_mutex_unlock(&lock);
 		return -1;
 	}
 	else {
@@ -375,6 +382,7 @@ int enumerateSettings(FILE * outputStream) {
 		if (ret < GP_OK) {
 			fprintf (stderr, "camera_get_config failed: %d\n", ret);
 			gp_widget_free (widget);
+			pthread_mutex_unlock(&lock);
 			return -1;
 		}
 		
@@ -479,9 +487,11 @@ int enumerateSettings(FILE * outputStream) {
 		fprintf(outputStream, "{\n");
 		ret = displayChildren(widget, 1, true);
 		fprintf(outputStream, "}\n");
-		fflush(outputStream);
-		gp_widget_free(widget);
 		
+		fflush(outputStream);
+		
+		gp_widget_free(widget);
+		pthread_mutex_unlock(&lock);
 		return ret;
 	}
 }

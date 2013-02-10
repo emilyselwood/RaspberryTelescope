@@ -84,6 +84,50 @@
 			}
 		}
 		
+		function isoChange() {
+			var newValue = $("#isoSelect").find(":selected").text();
+			$.ajax("/setsetting?k=iso&v="+newValue);
+		}
+			
+		function shutterspeedChange() {
+			var newValue = $("#shutterSpeedSelect").find(":selected").text();
+			$.ajax("/setsetting?k=shutterspeed&v="+newValue);
+		}
+			
+		function apertureChange() {
+			var newValue = $("#apertureSelect").find(":selected").text();
+			$.ajax("/setsetting?k=aperture&v="+newValue);
+		}
+			
+		function whitebalanceChange() {
+			var newValue = $("#whiteBalanceSelect").find(":selected").text();
+			$.ajax("/setsetting?k=whitebalance&v="+newValue);
+		}
+		
+		function populateSelect(name, choices, selected) {
+			$(name).empty();
+			$.each(choices, function(index, choiceValue) {
+				$(name).append($('<option>', { value : index })
+					.text(choiceValue));
+			});
+			
+			$(name + " option").filter(function() {
+				return $(this).text() == selected;
+			}).attr('selected', true);
+		}
+		
+		function handleJSONSettings(data) {
+			populateSelect('#isoSelect', data.main.imgsettings.iso.choices, data.main.imgsettings.iso.value);
+			populateSelect('#shutterSpeedSelect', data.main.capturesettings.shutterspeed.choices, data.main.capturesettings.shutterspeed.value);
+			populateSelect('#apertureSelect', data.main.capturesettings.aperture.choices, data.main.capturesettings.aperture.value);
+			populateSelect('#whiteBalanceSelect', data.main.imgsettings.whitebalance.choices, data.main.imgsettings.whitebalance.value);
+		
+			$("#isoSelect").change(isoChange);
+			$("#shutterSpeedSelect").change(shutterspeedChange);
+			$("#apertureSelect").change(apertureChange);
+			$("#whiteBalanceSelect").change(whitebalanceChange);
+		}
+		
 		$(function() {
 			$( "#captureButton" )
 				.button()
@@ -105,7 +149,7 @@
 			$("#cameraOptions").hide();
 			
 			//$("#previewOptionsButton").set(":checked");
-			
+			$.getJSON("/settings", handleJSONSettings);
 		});
 	
 	</script>
@@ -124,12 +168,38 @@
 	<img id="previewImage" src="/preview" />
 </div>
 <div id="captureOptions">
-	<div><label for="immediatSetting">Show image immediately</label><input type="checkbox" id="immediatSetting" <? if string.find(request_info.query_string, 'r=1') then print('checked=\"checked\"') end ?>/></div>
-	<div><label for="immediatSetting">Delete from camera</label><input type="checkbox" id="deleteSetting" <? if string.find(request_info.query_string, 'd=1') then print('checked=\"checked\"') end ?>/></div>
-	<div><label for="captureName">File Name:</label><input type="text" <? print('value=', findParam(request_info.query_string, 'n=')) ?> id="captureName" />Warning if the file already exists it will be overwritten. Leave blank for a date stamped file name.</div>
+	<div class="setting">
+		<label for="immediatSetting">Show image immediately</label>
+		<input type="checkbox" id="immediatSetting" <? if string.find(request_info.query_string, 'r=1') then print('checked=\"checked\"') end ?>/>
+	</div>
+	<div class="setting">
+		<label for="immediatSetting">Delete from camera</label>
+		<input type="checkbox" id="deleteSetting" <? if string.find(request_info.query_string, 'd=1') then print('checked=\"checked\"') end ?>/>
+	</div>
+	<div class="setting">
+		<label for="captureName">File Name:</label>
+		<input type="text" <? print('value=', findParam(request_info.query_string, 'n=')) ?> id="captureName" />
+		Warning if the file already exists it will be overwritten. Leave blank for a date stamped file name.
+	</div>
 </div>
 <div id="cameraOptions">
 	<p>This is where the camera options will go. Things like ISO and exposure time.</p>
+	<div class="setting">
+		<label for="isoSelect">ISO</label>
+		<select id="isoSelect"></select>
+	</div>
+	<div class="setting">
+		<label for="shutterSpeedSelect">Shutter Speed</label>
+		<select id="shutterSpeedSelect"></select>
+	</div>
+	<div class="setting">
+		<label for="apertureSelect">Aperture</label>
+		<select id="apertureSelect"></select>
+	</div>
+	<div class="setting">
+		<label for="whiteBalanceSelect">White Balance</label>
+		<select id="whiteBalanceSelect"></select>
+	</div>
 </div>
 </body>
 </html>

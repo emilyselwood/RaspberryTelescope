@@ -1,6 +1,7 @@
 // need this for open_memstream
 // this is only going to work on linux for now (windows on a Raspberry Pi? We'll leave that to others.)
 #define _GNU_SOURCE
+
 #include <stdio.h>
 #include <execinfo.h>
 #include <signal.h>
@@ -26,6 +27,9 @@
 #define SETTINGS_URL "/settings"
 #define SETTINGS_URL_LENGTH 9
 
+#define SET_SETTING_URL "/setsetting"
+#define SET_SETTING_URL_LENGTH 11
+
 // global configuration as this will be accessed in the call backs.
 config_t cfg;
 
@@ -38,7 +42,7 @@ void *returnResult(struct mg_connection *conn, const int status, const char * st
 			"Cache-Control: no-store\n\n" // make sure the browser actually redownloads the image. safari is annoying.
             "\r\n"
             "%s",
-            status, statusMessage, content_length, content);
+            status, statusMessage, content_length+2, content);
 	return "";
 }
 
@@ -115,10 +119,34 @@ void * processSettings(struct mg_connection *conn, const struct mg_request_info 
 	FILE * stream = open_memstream(&buffer, &size);
 	
 	enumerateSettings(stream);
+	
 	fclose(stream);
-	void * res = returnResult(conn, 200, "OK", buffer, size+2);
+	returnResult(conn, 200, "OK", buffer, size);
 	free(buffer);
-	return res;
+	return "";
+}
+
+void * processSetSetting(struct mg_connection *conn, const struct mg_request_info *request_info) {
+	char key[50];
+	char value[50];
+
+	int keyLength = extractStringQueryParam(request_info, "k", key, 50);
+	int valueLength = extractStringQueryParam(request_info, "v", value, 50);
+	
+	if(keyLength <= 0 || valueLength <= 0) {
+		const char * message = "Missing setting information";
+		return returnResult(conn, 400, message, message, strlen(message));
+	}
+	else {
+		int res = setSetting(key, value);
+		if(res == 0) {
+			return returnResult(conn, 200, "OK", "", 0);	
+		}
+		else {
+			const char * message = "Failed to change setting";
+			return returnResult(conn, 503, message, message, strlen(message));
+		}
+	}
 }
 
 static void *callback(enum mg_event event, struct mg_connection *conn) {
@@ -139,6 +167,9 @@ static void *callback(enum mg_event event, struct mg_connection *conn) {
 		}
 		else if( strcmp(request_info->uri, SETTINGS_URL) == 0) {
 			return processSettings(conn, request_info);
+		}
+		else if( strncmp(request_info->uri, SET_SETTING_URL, SET_SETTING_URL_LENGTH) == 0) {
+			return processSetSetting(conn, request_info);
 		}
 		else {
 			// if we return null it falls out the end of this handler and tries the document_root to see if a file exists there.

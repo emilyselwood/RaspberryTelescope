@@ -29,7 +29,7 @@ bool extractBoolQueryParamDefault(const struct mg_request_info *request_info, co
 int extractStringQueryParam(const struct mg_request_info *request_info, const char * paramKey, char * buffer, const int length) {
 	size_t queryLength = nullSafeStrLen(request_info->query_string);
 
-	return mg_get_var(request_info->query_string, queryLength, "n", buffer, length);
+	return mg_get_var(request_info->query_string, queryLength, paramKey, buffer, length);
 }
 
 int extractStringQueryParamDefault(const struct mg_request_info *request_info, const char * paramKey, const char * def, char * buffer, const int length) {
