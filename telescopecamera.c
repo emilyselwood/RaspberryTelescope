@@ -361,6 +361,8 @@ int setSetting(const char * setting, const char * newValue) {
 	}
 }
 
+
+
 int enumerateSettings(FILE * outputStream) {
 	initCamaraAndContext();
 
@@ -376,19 +378,54 @@ int enumerateSettings(FILE * outputStream) {
 			return -1;
 		}
 		
+		void indent(int depth) {
+			for( int i = 0; i < depth; i++ ) {
+				fprintf(outputStream, "\t");
+			}
+		}
+		
+		void printValue(CameraWidget * widget, const int depth, const char *name, const char * value) {
+			int choicesCount;
+			
+			fprintf(outputStream, "\"%s\" : {\n", name);
+			indent(depth+1);
+			fprintf(outputStream, "\"value\" : \"%s\"", value);
+			
+			choicesCount = gp_widget_count_choices(widget);
+			if(choicesCount > 0) {
+				fprintf(outputStream, ",\n");
+				indent(depth + 1);
+				fprintf(outputStream, "\"choices\" : [");
+				for(int i = 0; i < choicesCount; i++) {
+					const char * choice;
+					ret = gp_widget_get_choice(widget, i, &choice);
+					if(ret == GP_OK) {
+						fprintf(outputStream, "\"%s\"", choice);
+					}
+					if(i < (choicesCount -1)) {
+						fprintf(outputStream, ",");
+					}
+				}
+				fprintf(outputStream, "]\n");
+			}
+			else {
+				fprintf(outputStream, "\n");
+			}
+			indent(depth);
+			fprintf(outputStream, "}");
+		}
+		
 		// internal tree walking function
 		int displayChildren(CameraWidget * widget, int depth, bool last) {
 			const char *name;
 			void *value;
-			
+
 			int ret = gp_widget_get_name(widget, &name);
 			if(ret < GP_OK) {
 				return -1;
 			}
 			CameraWidgetType type;
-			for( int i = 0; i < depth; i++ ) {
-				fprintf(outputStream, "\t");
-			}
+			indent(depth);
 			
 			ret = gp_widget_get_type (widget, &type);
 			switch (type) {
@@ -409,27 +446,23 @@ int enumerateSettings(FILE * outputStream) {
 					}
 					
 					if(count > 0) {
-						for( int i = 0; i < depth; i++ ) {
-							fprintf(outputStream, "\t");
-						}
+						indent(depth);
 						fprintf(outputStream, "}");
 					}
 				break;
 				case GP_WIDGET_MENU:
 				case GP_WIDGET_RADIO:
 				case GP_WIDGET_TEXT:
-					ret = gp_widget_get_value(widget, &value);
-					if(value == NULL) {
-						fprintf(outputStream, "\"%s\" : \"\"", name);
-					}
-					else {
-						fprintf(outputStream, "\"%s\" : \"%s\"", name, (char*)value);
-					}
+					gp_widget_get_value(widget, &value);
+					printValue(widget, depth, name, (char *) value);
 				break;	
-				case GP_WIDGET_TOGGLE:
+				case GP_WIDGET_TOGGLE:	// with these the value of the pointer is the actual value.
 				case GP_WIDGET_DATE:
-					ret = gp_widget_get_value(widget, &value);
-					fprintf(outputStream, "\"%s\" : \"%ld\"", name, ((long)value));	
+					gp_widget_get_value(widget, &value);
+					char str[15];
+					snprintf(str, 15, "%d", ((int)value));
+					
+					printValue(widget, depth, name, str);
 				break;
 			default:
 				fprintf(outputStream, "\"%s\" : \"has bad type %d\"", name, type);
