@@ -46,7 +46,9 @@ Make Targets:
 * raspberrytelescope : Builds every thing at the moment.
 * clean : clean
 
-At the moment there is one warning generated in the mongoose.c file about an int being cast to a pointer if you are building on a 64bit machine. This doesn't happen on a Pi
+At the moment there two warnings one in the mongoose.c file and one in telescopecamera.c about a pointer being cast 
+to an integer if you are building on a 64bit machine. This doesn't happen on a Pi. 
+These are both due to using void * to store int data.
 
 To run the web server simply execude the raspberrytelescope command. To exit press enter in the shell thats running the webserver.
 
