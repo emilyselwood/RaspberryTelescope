@@ -86,6 +86,7 @@ Project Structure
     * /preview - generates a preview image (used for the live preview on the index page)
     * /capture - actually captures an image and returns it to the browser.
     * /summary - returns the summary information from the camera. This can be useful for debugging whats going on.
+    * /settings - returns a JSON feed of the settings currently in the camera.
 * telescopecamera.c / .h contains all the code for interfacing with the camera.
 * stringutils.c / .h some string helper functions.
 * mongoose.c / .h all the code for the mongoose web server.
