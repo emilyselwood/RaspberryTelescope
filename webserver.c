@@ -10,6 +10,9 @@
 #include <time.h>
 #include <stdbool.h>
 #include <libconfig.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
 #include "mongoose.h"
 #include "telescopecamera.h"
@@ -224,6 +227,17 @@ int main(void) {
 		return -1;
 	}
 
+	// check that the preview directory exists.
+	const char *path;
+	config_lookup_string(&cfg, "capture.preview_path", &path);
+	struct stat st;
+	if(stat(path,&st) != 0) {
+		fprintf(stderr, "Error preview path doesn't seem to exist. %s\n", path);
+		config_destroy(&cfg);
+		resetCamera(); // just in case.
+		return -2;
+	}
+	
 	const char *port;
 	config_lookup_string(&cfg, "webserver.port", &port);
 	
