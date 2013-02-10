@@ -32,6 +32,48 @@ static void ctx_status_func (GPContext *context, const char *str, void *data)
 }
 
 /*
+	* This function looks up a label or key entry of
+	* a configuration widget.
+	* The functions descend recursively, so you can just
+	* specify the last component.
+	*/
+int _lookup_widget(CameraWidget*widget, const char *key, CameraWidget **child) {
+	int ret = gp_widget_get_child_by_name (widget, key, child);
+	if (ret < GP_OK) {
+		ret = gp_widget_get_child_by_label (widget, key, child);
+	}
+	return ret;
+}
+	
+int getWidget(CameraWidget ** widget, CameraWidget ** child, const char * setting) {
+	CameraWidgetType type;
+
+	int ret = gp_camera_get_config (camera, widget, context);
+	if (ret < GP_OK) {
+		fprintf (stderr, "camera_get_config failed: %d\n", ret);
+		return ret;
+	}
+
+	ret = _lookup_widget (*widget, setting, child);
+	if (ret < GP_OK || child == NULL) {
+		fprintf (stderr, "l lookup widget failed: %d\n", ret);
+		gp_widget_free (*widget);
+		return ret;
+	}
+
+	/* This type check is optional, if you know what type the label
+	 * has already. If you are not sure, better check. */
+	ret = gp_widget_get_type (*child, &type);
+	if (ret < GP_OK) {
+		fprintf (stderr, "l widget get type failed: %d\n", ret);
+		gp_widget_free (*widget);
+		return ret;
+	}
+
+	return GP_OK;
+}
+
+/*
  * This enables/disables the specific canon capture mode.
  * 
  * For non canons this is not required, and will just return
@@ -42,35 +84,15 @@ int canon_enable_capture (Camera *camera, int onoff, GPContext *context) {
 	CameraWidgetType	type;
 	int 				ret;
 
-	/*
-	 * This function looks up a label or key entry of
-	 * a configuration widget.
-	 * The functions descend recursively, so you can just
-	 * specify the last component.
-	 */
-	int _lookup_widget(CameraWidget*widget, const char *key, CameraWidget **child) {
-		int ret;
-		ret = gp_widget_get_child_by_name (widget, key, child);
-		if (ret < GP_OK)
-			ret = gp_widget_get_child_by_label (widget, key, child);
-		return ret;
-	}
-	
-	ret = gp_camera_get_config (camera, &widget, context);
-	if (ret < GP_OK) {
-		fprintf (stderr, "camera_get_config failed: %d\n", ret);
-		return ret;
-	}
-	ret = _lookup_widget (widget, "capture", &child);
-	if (ret < GP_OK) {
-		fprintf (stderr, "lookup widget failed: %d\n", ret);
-		gp_widget_free (widget);
+	ret = getWidget(&widget, &child, "capture");
+	if (ret < GP_OK || child == NULL) {
+		fprintf (stderr, "x lookup widget failed: %d\n", ret);
 		return ret;
 	}
 
 	ret = gp_widget_get_type (child, &type);
 	if (ret < GP_OK) {
-		fprintf (stderr, "widget get type failed: %d\n", ret);
+		fprintf (stderr, "x widget get type failed: %d\n", ret);
 		gp_widget_free (widget);
 		return ret;
 	}
@@ -129,7 +151,7 @@ void initCamaraAndContext() {
 			resetCamera();
 		}
 		else {
-			canon_enable_capture(camera, TRUE, context);
+			canon_enable_capture(camera, 1, context);
 			initFailed = false;
 		}
 	}
@@ -264,5 +286,169 @@ int capturePreview(char * fileName) {
 		gp_file_unref(file);
 		pthread_mutex_unlock(&lock);
 		return 0;
+	}
+}
+
+int getSetting(const char * setting, char * result, size_t resultLength) {
+
+	initCamaraAndContext();
+	
+	if( initFailed ) {
+		return -1;
+	}
+	else {
+		CameraWidget * widget = NULL; // will hold the root config entry
+		CameraWidget * child  = NULL; // will hold the actual config entry from the tree
+
+		int ret = getWidget(&widget, &child, setting);
+		if (ret < GP_OK) {
+			fprintf (stderr, "camera_get_config failed: %d\n", ret);
+			gp_widget_free (widget);
+			return ret;
+		}
+
+		/* This is the actual query call. Note that we just
+		* a pointer reference to the string, not a copy... */
+		char *val;
+		ret = gp_widget_get_value (child, &val);
+		if (ret < GP_OK) {
+			fprintf (stderr, "could not query widget value: %d\n", ret);
+			gp_widget_free (widget);
+			return ret;
+		}
+
+		/* Create a new copy for our caller. */
+		snprintf(result, resultLength, "%s", val);
+
+		gp_widget_free (widget);
+		return ret;
+	}
+}
+
+int setSetting(const char * setting, const char * newValue) {
+	initCamaraAndContext();
+
+	if( initFailed ) {
+		return -1;
+	}
+	else {
+		CameraWidget * widget = NULL; // will hold the root config entry
+		CameraWidget * child  = NULL; // will hold the actual config entry from the tree
+
+		int ret = getWidget(&widget, &child, setting);
+		if (ret < GP_OK) {
+			fprintf (stderr, "camera_get_config failed: %d\n", ret);
+			return ret;
+		}
+		
+		ret = gp_widget_set_value(child, newValue);
+		if (ret < GP_OK) {
+			fprintf (stderr, "could not set widget value: %d\n", ret);
+			gp_widget_free (widget);
+			return ret;
+		}
+		
+		/* This stores it on the camera again */
+		ret = gp_camera_set_config (camera, widget, context);
+		if (ret < GP_OK) {
+			fprintf (stderr, "camera_set_config failed: %d\n", ret);
+			gp_widget_free (widget);
+			return ret;
+		}
+		
+		gp_widget_free (widget);
+		return 0;
+	}
+}
+
+int enumerateSettings(FILE * outputStream) {
+	initCamaraAndContext();
+
+	if( initFailed ) {
+		return -1;
+	}
+	else {
+		CameraWidget * widget = NULL; // will hold the root config entry
+		int ret = gp_camera_get_config (camera, &widget, context);
+		if (ret < GP_OK) {
+			fprintf (stderr, "camera_get_config failed: %d\n", ret);
+			gp_widget_free (widget);
+			return -1;
+		}
+		
+		// internal tree walking function
+		int displayChildren(CameraWidget * widget, int depth, bool last) {
+			const char *name;
+			void *value;
+			
+			int ret = gp_widget_get_name(widget, &name);
+			if(ret < GP_OK) {
+				return -1;
+			}
+			CameraWidgetType type;
+			for( int i = 0; i < depth; i++ ) {
+				fprintf(outputStream, "\t");
+			}
+			
+			ret = gp_widget_get_type (widget, &type);
+			switch (type) {
+				case GP_WIDGET_WINDOW:
+				case GP_WIDGET_SECTION:
+					fprintf(outputStream, "\"%s\"", name);
+					
+					int count = gp_widget_count_children(widget);
+					if(count > 0) {
+						fprintf(outputStream, " : {\n");
+					}
+					int newDepth = depth + 1;
+					for (int i = 0; i < count; i++) {
+						CameraWidget * child = NULL;
+						gp_widget_get_child(widget, i, &child);
+						
+						displayChildren(child, newDepth, (i == (count - 1)) );
+					}
+					
+					if(count > 0) {
+						for( int i = 0; i < depth; i++ ) {
+							fprintf(outputStream, "\t");
+						}
+						fprintf(outputStream, "}");
+					}
+				break;
+				case GP_WIDGET_MENU:
+				case GP_WIDGET_RADIO:
+				case GP_WIDGET_TEXT:
+					ret = gp_widget_get_value(widget, &value);
+					if(value == NULL) {
+						fprintf(outputStream, "\"%s\" : \"\"", name);
+					}
+					else {
+						fprintf(outputStream, "\"%s\" : \"%s\"", name, (char*)value);
+					}
+				break;	
+				case GP_WIDGET_TOGGLE:
+				case GP_WIDGET_DATE:
+					ret = gp_widget_get_value(widget, &value);
+					fprintf(outputStream, "\"%s\" : \"%ld\"", name, ((long)value));	
+				break;
+			default:
+				fprintf(outputStream, "\"%s\" : \"has bad type %d\"", name, type);
+			}
+			
+			if(!last) {
+				fprintf(outputStream, ",");
+			}
+			fprintf(outputStream, "\n");
+			
+			return 0;
+		}
+		
+		fprintf(outputStream, "{\n");
+		ret = displayChildren(widget, 1, true);
+		fprintf(outputStream, "}\n");
+		fflush(outputStream);
+		gp_widget_free(widget);
+		
+		return ret;
 	}
 }

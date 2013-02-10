@@ -4,7 +4,7 @@ PROG=raspberrytelescope
 
 LUA=lua-5.2.1/src
 CC=gcc
-CFLAGS=-Wall -g -rdynamic
+CFLAGS=-Wall -g -rdynamic -std=c99
 LDFLAGS=-ldl -pthread -lgphoto2 -lconfig -I$(LUA) -L$(LUA) -llua -lm
 MONGOOSE_BUILD_OPTS=-DUSE_LUA
 

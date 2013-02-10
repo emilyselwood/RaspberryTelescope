@@ -1,4 +1,6 @@
- 
+// need this for open_memstream
+// this is only going to work on linux for now (windows on a Raspberry Pi? We'll leave that to others.)
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <execinfo.h>
 #include <signal.h>
@@ -20,6 +22,9 @@
 
 #define PREVIEW_URL "/preview"
 #define PREVIEW_URL_LENGTH 8
+
+#define SETTINGS_URL "/settings"
+#define SETTINGS_URL_LENGTH 9
 
 // global configuration as this will be accessed in the call backs.
 config_t cfg;
@@ -104,6 +109,17 @@ void *processPreview(struct mg_connection *conn, const struct mg_request_info *r
 	return "";
 }
 
+void * processSettings(struct mg_connection *conn, const struct mg_request_info *request_info) {
+	char * buffer;
+    size_t size;
+	FILE * stream = open_memstream(&buffer, &size);
+	
+	enumerateSettings(stream);
+	fclose(stream);
+	void * res = returnResult(conn, 200, "OK", buffer, size+2);
+	free(buffer);
+	return res;
+}
 
 static void *callback(enum mg_event event, struct mg_connection *conn) {
 
@@ -120,6 +136,9 @@ static void *callback(enum mg_event event, struct mg_connection *conn) {
 		}
 		else if( strncmp(request_info->uri, PREVIEW_URL, PREVIEW_URL_LENGTH) == 0 ) { // strncmp so we look for preview but ignore cache breaker.
 			return processPreview(conn, request_info);
+		}
+		else if( strcmp(request_info->uri, SETTINGS_URL) == 0) {
+			return processSettings(conn, request_info);
 		}
 		else {
 			// if we return null it falls out the end of this handler and tries the document_root to see if a file exists there.

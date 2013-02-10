@@ -24,8 +24,23 @@ int takePicture(char * fileName, bool deleteFromCamera);
 int capturePreview(char * fileName);
 
 /**
- * cleans up the camera context. Should be used when we are done with it,
+ * Cleans up the camera context. Should be used when we are done with it,
  */
 void resetCamera();
+
+/**
+ * Set a setting in the camera
+ */
+int setSetting(const char * setting, const char * newValue);
+
+/**
+ * Get a setting value from the camera
+ */
+int getSetting(const char * setting, char * result, size_t resultLength);
+
+/**
+ * Writes all the camera settings to the outputStream in JSON format.
+ */
+int enumerateSettings(FILE * outputStream);
 
 #endif
