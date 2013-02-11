@@ -10,7 +10,8 @@ Features
 * Remote Triggering
 * Adjust Camera settings (iso, shutter speed, etc)
 * Capture to server or return immedatly to browser
-* Controlled through a web browser.
+* Burst Mode
+* Controlled through a web browser
 
 Roadmap
 -------
@@ -96,7 +97,9 @@ Project Structure
 
 The /capture service takes several query parameters:
 * n=[filename] this alows you to pass the name to save the picture with.
-* r=[0|1] return the file to the user or not. If 1 returns the file to the user. if not it doesn't and just saves it in the webRoot/img/ directory
+* r=[0|1] return the file to the user or not. If 1 returns the file to the user. If not it doesn't. Either way it will save it in the webRoot/img/ directory
+* d=[0|1] Should the file be removed from the camera once it has been downloaded and saved by the server.
+* i=[0-9999] capture a number of images, will always capture at least one image even if you send zero. Note the return option only works if this is 0, 1 or not set.
 
 The /setsetting service takes two query parameters:
 * k=[setting name] this is the name of the setting you want to update.
