@@ -42,3 +42,26 @@ int extractStringQueryParamDefault(const struct mg_request_info *request_info, c
 	return res;
 }
 
+int extractIntQueryParam(const struct mg_request_info *request_info, const char *paramKey) {
+	char buffer[20];
+	int res = extractStringQueryParam(request_info, paramKey, buffer, 20);
+	if( res < 0 ) {
+		return 0;
+	}
+	if(isInteger(buffer)) {
+		return atoi(buffer);
+	}
+	else {
+		return 0;
+	}
+}
+
+bool isInteger(const char * s)
+{
+   if(s == NULL || *s == '\0') return false ;
+
+   char * p ;
+   strtol(s, &p, 10) ;
+
+   return (*p == 0) ;
+}

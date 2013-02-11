@@ -1,15 +1,15 @@
 <!doctype html>
 <?
-	function findParam(request, param)
+	function findParam(request, param, default)
 		local start = string.find(request, param) + 2
 		if not start
 		then
-			return '\"\"'
+			return default
 		else
 			local param_end = string.find(request, '&', start)
 			if not param_end
 			then 
-				return string.sub(request, start)
+				return string.sub(request, start) 
 			else
 				return string.sub(request, start, param_end - 1)
 			end
@@ -60,8 +60,12 @@
 			if($("#deleteSetting").is(":checked")) {
 				deleteValue = "&d=1"
 			}
+			var captureCountValue = $.trim($("#captureCount").val())
+			if(captureCountValue != "") {
+				captureCountValue = "&i=" + captureCountValue
+			}
 			
-			window.location.href = "/capture?" + returnValue + fileName + deleteValue;
+			window.location.href = "/capture?" + returnValue + fileName + deleteValue + captureCountValue;
 		}
 		
 		function optionsButtonClick() {
@@ -178,8 +182,13 @@
 	</div>
 	<div class="setting">
 		<label for="captureName">File Name:</label>
-		<input type="text" <? print('value=', findParam(request_info.query_string, 'n=')) ?> id="captureName" />
+		<input type="text" <? print('value=' .. findParam(request_info.query_string, 'n=', '')) ?> id="captureName" />
 		Warning if the file already exists it will be overwritten. Leave blank for a date stamped file name.
+	</div>
+	<div class="setting">
+		<label for="captureCount">Number of frames:</label>
+		<input type="text" <? print('value=\"' .. findParam(request_info.query_string, 'i=', '1') .. '\"') ?> id="captureCount" />
+		Instruct the camera to take this many pictures as fast as possible. a number will be appended to the file name along with the image file extention.
 	</div>
 </div>
 <div id="cameraOptions">

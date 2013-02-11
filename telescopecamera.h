@@ -8,20 +8,23 @@
  * return summary information from the camera
  * Takes a buffer to put the resulting text in, and the size of the buffer.
  */
-int getCamaraSummary(char * content, int sizeOfContent);
+int getCamaraSummary(char * content, const int sizeOfContent);
 
 /**
  * capture an actual picture.
  * Saves the picture to the local disk with the fileName provided.
  * deletes the copy of the picture on the camera
  */
-int takePicture(char * fileName, bool deleteFromCamera);
+int takePicture(const char * fileName, const bool deleteFromCamera);
+
+
+int takeNPictures(const int n, const char * fileName, const char * postfix, const bool deleteFromCamera);
 
 /**
  * Captures a preview frame. Saves to the provided fileName/
  * Note this leaves the shutter open.
  */
-int capturePreview(char * fileName);
+int capturePreview(const char * fileName);
 
 /**
  * Cleans up the camera context. Should be used when we are done with it,

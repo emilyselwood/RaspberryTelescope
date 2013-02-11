@@ -14,4 +14,9 @@ bool extractBoolQueryParamDefault(const struct mg_request_info *request_info, co
 int extractStringQueryParam(const struct mg_request_info *request_info, const char *paramKey, char *buffer, const int length);
 int extractStringQueryParamDefault(const struct mg_request_info *request_info, const char *paramKey, const char *def, char *buffer, const int length);
 
+// this one always returns zero as a default value.
+int extractIntQueryParam(const struct mg_request_info *request_info, const char *paramKey);
+
+bool isInteger(const char * s);
+
 #endif

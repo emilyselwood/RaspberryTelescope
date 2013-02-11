@@ -31,6 +31,8 @@ static void ctx_status_func (GPContext *context, const char *str, void *data)
 	fflush(stderr);
 }
 
+
+
 	/*
 	* This function looks up a label or key entry of
 	* a configuration widget.
@@ -161,16 +163,36 @@ void resetCamera() {
 	gp_camera_exit(camera, context);
 	gp_camera_free (camera);
 
-	
-
 	camera = NULL;
 	context = NULL;
 }
 
-// handle creation of the lock if it doesn't exist.
-bool getLock() {
+int waitForCaptureComplete() {
 	pthread_mutex_lock(&lock);
-	return true;
+	
+	int waitTime = 2000;
+	CameraEventType type;
+	void *data;
+
+	while(1) {
+		if(gp_camera_wait_for_event(camera, waitTime, &type, &data, context) == GP_ERROR_NOT_SUPPORTED) {
+			printf("camera doesn't support wait.");
+			sleep(500); // hopefully this will be enough.
+			break;
+		}
+		if(type == GP_EVENT_TIMEOUT) {
+			break;
+		}
+		else if (type == GP_EVENT_CAPTURE_COMPLETE) {
+			waitTime = 100;
+		}
+		else if (type != GP_EVENT_UNKNOWN) {
+			printf("Unexpected event received from camera: %d\n", (int)type);
+		}
+	}
+	pthread_mutex_unlock(&lock);
+	return 0;
+	
 }
 
 /**
@@ -204,7 +226,7 @@ int getCamaraSummary(char * content, const int sizeOfContent) {
 	return content_length;
 }
 
-int takePicture(char * fileName, bool deleteFromCamera) {
+int takePicture(const char * fileName, const bool deleteFromCamera) {
 
 	pthread_mutex_lock(&lock);
 	
@@ -220,7 +242,7 @@ int takePicture(char * fileName, bool deleteFromCamera) {
 
 		/* NOP: This gets overridden in the library to /capt0000.jpg */
 		strcpy(camera_file_path.folder, "/");
-		strcpy(camera_file_path.name, "foo.jpg");
+		strcpy(camera_file_path.name, fileName);
 
 		gp_camera_capture(camera, GP_CAPTURE_IMAGE, &camera_file_path, context);
 
@@ -238,9 +260,20 @@ int takePicture(char * fileName, bool deleteFromCamera) {
 	}
 }
 
+int takeNPictures(const int n, const char * fileName, const char * postfix, const bool deleteFromCamera) {
+	int res;
+	for(int i = 0; i < n; i++) {
+		char entryName[100];
+		snprintf(entryName, 100, "%s-%d.%s", fileName, i, postfix);
+		res = takePicture(entryName, deleteFromCamera);
+		if(res < 0) {
+			return -1;
+		}
+	}
+	return 1;
+}
 
-
-int capturePreview(char * fileName) {
+int capturePreview(const char * fileName) {
 
 	pthread_mutex_lock(&lock);
 	

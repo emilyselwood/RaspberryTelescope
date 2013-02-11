@@ -61,21 +61,38 @@ void *processCapture(struct mg_connection *conn, const struct mg_request_info *r
 
 	printf("Capturing image\n");
 
+	int captureCount = extractIntQueryParam(request_info, "i");
 	char resultFileName[500];
 
 	char timeStampedName[19];
 	time_t t = time(NULL);
-	strftime(timeStampedName, 19, "%Y%m%d%H%M%S.jpg", localtime(&t));
+	if(captureCount > 1) {
+		strftime(timeStampedName, 19, "%Y%m%d%H%M%S", localtime(&t));
+	}
+	else {
+		strftime(timeStampedName, 19, "%Y%m%d%H%M%S.jpg", localtime(&t));
+	}
 	extractStringQueryParamDefault(request_info, "n", timeStampedName, resultFileName, 500);
 
+	
+	
 	bool shouldSendBack = extractBoolQueryParam(request_info, "r");
 	bool shouldDelete = extractBoolQueryParam(request_info, "d");
 
 	char outputPath[500];
 	sprintf(outputPath, "webRoot/img/%s", resultFileName);
 
-	if(takePicture(outputPath, shouldDelete) > 0) {
-		if(shouldSendBack) {
+	int res;
+	if(captureCount > 1) {
+		printf("about to try and capture %d pictures with name %s\n", captureCount, outputPath);
+		res = takeNPictures(captureCount, outputPath, "jpg", shouldDelete);
+	}
+	else {
+		res = takePicture(outputPath, shouldDelete);
+	}
+	
+	if(res > 0) {
+		if(shouldSendBack && (captureCount <= 1)) {
 			mg_send_file(conn, outputPath);
 		}
 		else {
