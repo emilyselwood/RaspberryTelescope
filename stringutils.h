@@ -19,4 +19,6 @@ int extractIntQueryParam(const struct mg_request_info *request_info, const char 
 
 bool isInteger(const char * s);
 
+void indent(FILE * outputStream, int depth);
+
 #endif

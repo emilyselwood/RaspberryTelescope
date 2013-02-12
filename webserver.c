@@ -17,6 +17,7 @@
 #include "mongoose.h"
 #include "telescopecamera.h"
 #include "stringutils.h"
+#include "fileutils.h"
 
 #define SUMMARY_URL "/summary"
 #define SUMMARY_URL_LENGTH 8
@@ -32,6 +33,9 @@
 
 #define SET_SETTING_URL "/setsetting"
 #define SET_SETTING_URL_LENGTH 11
+
+#define LIST_IMAGES_URL "/listimages"
+#define LIST_IMAGES_URL_LENGTH 11
 
 // global configuration as this will be accessed in the call backs.
 config_t cfg;
@@ -169,6 +173,20 @@ void * processSetSetting(struct mg_connection *conn, const struct mg_request_inf
 	}
 }
 
+void * processListImages(struct mg_connection *conn, const struct mg_request_info *request_info) {
+
+	char * buffer;
+    size_t size;
+	FILE * stream = open_memstream(&buffer, &size);
+
+	listImageDirectory("webRoot/img/", stream);
+
+	fclose(stream);
+	returnResult(conn, 200, "OK", buffer, size);
+	free(buffer);
+	return "";
+}
+
 static void *callback(enum mg_event event, struct mg_connection *conn) {
 
 
@@ -190,6 +208,9 @@ static void *callback(enum mg_event event, struct mg_connection *conn) {
 		}
 		else if( strncmp(request_info->uri, SET_SETTING_URL, SET_SETTING_URL_LENGTH) == 0) {
 			return processSetSetting(conn, request_info);
+		}
+		else if( strncmp(request_info->uri, LIST_IMAGES_URL, LIST_IMAGES_URL_LENGTH) == 0) {
+			return processListImages(conn, request_info);
 		}
 		else {
 			// if we return null it falls out the end of this handler and tries the document_root to see if a file exists there.

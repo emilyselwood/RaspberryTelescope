@@ -65,3 +65,9 @@ bool isInteger(const char * s)
 
    return (*p == 0) ;
 }
+
+void indent(FILE * outputStream, const int depth) {
+	for( int i = 0; i < depth; i++ ) {
+		fprintf(outputStream, "\t");
+	}
+}

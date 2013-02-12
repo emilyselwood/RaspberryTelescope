@@ -4,6 +4,8 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <pthread.h>
+
+#include "stringutils.h"
 #include "telescopecamera.h"
 
 
@@ -419,23 +421,17 @@ int enumerateSettings(FILE * outputStream) {
 			return -1;
 		}
 		
-		void indent(int depth) {
-			for( int i = 0; i < depth; i++ ) {
-				fprintf(outputStream, "\t");
-			}
-		}
-		
 		void printValue(CameraWidget * widget, const int depth, const char *name, const char * value) {
 			int choicesCount;
 			
 			fprintf(outputStream, "\"%s\" : {\n", name);
-			indent(depth+1);
+			indent(outputStream, depth+1);
 			fprintf(outputStream, "\"value\" : \"%s\"", value);
 			
 			choicesCount = gp_widget_count_choices(widget);
 			if(choicesCount > 0) {
 				fprintf(outputStream, ",\n");
-				indent(depth + 1);
+				indent(outputStream, depth + 1);
 				fprintf(outputStream, "\"choices\" : [");
 				for(int i = 0; i < choicesCount; i++) {
 					const char * choice;
@@ -452,7 +448,7 @@ int enumerateSettings(FILE * outputStream) {
 			else {
 				fprintf(outputStream, "\n");
 			}
-			indent(depth);
+			indent(outputStream, depth);
 			fprintf(outputStream, "}");
 		}
 		
@@ -466,7 +462,7 @@ int enumerateSettings(FILE * outputStream) {
 				return -1;
 			}
 			CameraWidgetType type;
-			indent(depth);
+			indent(outputStream, depth);
 			
 			ret = gp_widget_get_type (widget, &type);
 			switch (type) {
@@ -487,7 +483,7 @@ int enumerateSettings(FILE * outputStream) {
 					}
 					
 					if(count > 0) {
-						indent(depth);
+						indent(outputStream, depth);
 						fprintf(outputStream, "}");
 					}
 				break;
