@@ -91,8 +91,10 @@ Project Structure
     * /summary - returns the summary information from the camera. This can be useful for debugging whats going on.
     * /settings - returns a JSON feed of the settings currently in the camera.
     * /setsetting - takes a key and value and updates a setting on the camera.
+    * /listimages - returns a json file listing of all the images in the webRoot/img folder. Does not return hidden files. Result is inode ordered. Sort client side.
 * telescopecamera.c / .h contains all the code for interfacing with the camera.
 * stringutils.c / .h some string helper functions.
+* fileutils.c /.h code for dealing with the file system.
 * mongoose.c / .h all the code for the mongoose web server.
 
 The /capture service takes several query parameters:
