@@ -8,7 +8,9 @@ a {
 	color:deepskyblue;
 }
 
-#captureOptions { margin-top: 2em; }
+.optionsTab {
+	margin-top: 2em;
+}
 
 .menu {
 	margin : 1em;

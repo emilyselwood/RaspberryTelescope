@@ -1,5 +1,4 @@
-<!doctype html>
-<?
+<!doctype html><?
 	function findParam(request, param, default)
 		local start = string.find(request, param) + 2
 		if not start
@@ -152,63 +151,62 @@
 			$("#captureOptions").hide();
 			$("#cameraOptions").hide();
 			
-			//$("#previewOptionsButton").set(":checked");
 			$.getJSON("/settings", handleJSONSettings);
 		});
 	
 	</script>
 </head>
 <body onload="setTimeout(updateImage, 1000);">
-<div class="menu">
-	<button id="captureButton" onclick="captureButtonClick" >Capture</button>
-	Settings:<span id="optionsButtonSet">
+	<div class="menu">
+		<button id="captureButton" onclick="captureButtonClick" >Capture</button>
+
 		<input type="radio" name="optionsButtonSet" id="previewOptionsButton" checked="checked" /><label for="previewOptionsButton">Preview</label>
-		<input type="radio" name="optionsButtonSet" id="captureOptionsButton" /><label for="captureOptionsButton">Capture</label>
-		<input type="radio" name="optionsButtonSet" id="cameraOptionsButton" /><label for="cameraOptionsButton">Camera</label>
-	</span>
-	<span id="tick">-50</span>
-</div>
-<div id="previewDiv">
-	<img id="previewImage" src="/preview" />
-</div>
-<div id="captureOptions">
-	<div class="setting">
-		<label for="immediatSetting">Show image immediately</label>
-		<input type="checkbox" id="immediatSetting" <? if string.find(request_info.query_string, 'r=1') then print('checked=\"checked\"') end ?>/>
+		Settings:<span id="optionsButtonSet">
+			<input type="radio" name="optionsButtonSet" id="captureOptionsButton" /><label for="captureOptionsButton">Capture</label>
+			<input type="radio" name="optionsButtonSet" id="cameraOptionsButton" /><label for="cameraOptionsButton">Camera</label>
+		</span>
+		<span id="tick">-50</span>
 	</div>
-	<div class="setting">
-		<label for="immediatSetting">Delete from camera</label>
-		<input type="checkbox" id="deleteSetting" <? if string.find(request_info.query_string, 'd=1') then print('checked=\"checked\"') end ?>/>
+	<div id="previewDiv">
+		<img id="previewImage" src="/preview" />
 	</div>
-	<div class="setting">
-		<label for="captureName">File Name:</label>
-		<input type="text" <? print('value=' .. findParam(request_info.query_string, 'n=', '')) ?> id="captureName" />
-		Warning if the file already exists it will be overwritten. Leave blank for a date stamped file name.
+	<div id="captureOptions" class="optionsTab">
+		<div class="setting">
+			<label for="immediatSetting">Show image immediately</label>
+			<input type="checkbox" id="immediatSetting" <? if string.find(request_info.query_string, 'r=1') then print('checked=\"checked\"') end ?>/>
+		</div>
+		<div class="setting">
+			<label for="immediatSetting">Delete from camera</label>
+			<input type="checkbox" id="deleteSetting" <? if string.find(request_info.query_string, 'd=1') then print('checked=\"checked\"') end ?>/>
+		</div>
+		<div class="setting">
+			<label for="captureName">File Name:</label>
+			<input type="text" <? print('value=' .. findParam(request_info.query_string, 'n=', '')) ?> id="captureName" />
+			Warning if the file already exists it will be overwritten. Leave blank for a date stamped file name.
+		</div>
+		<div class="setting">
+			<label for="captureCount">Number of frames:</label>
+			<input type="text" <? print('value=\"' .. findParam(request_info.query_string, 'i=', '1') .. '\"') ?> id="captureCount" />
+			Instruct the camera to take this many pictures as fast as possible. A number will be appended to the file name along with the image file extention.
+		</div>
 	</div>
-	<div class="setting">
-		<label for="captureCount">Number of frames:</label>
-		<input type="text" <? print('value=\"' .. findParam(request_info.query_string, 'i=', '1') .. '\"') ?> id="captureCount" />
-		Instruct the camera to take this many pictures as fast as possible. a number will be appended to the file name along with the image file extention.
+	<div id="cameraOptions" class="optionsTab">
+		<div class="setting">
+			<label for="isoSelect">ISO</label>
+			<select id="isoSelect"></select>
+		</div>
+		<div class="setting">
+			<label for="shutterSpeedSelect">Shutter Speed</label>
+			<select id="shutterSpeedSelect"></select>
+		</div>
+		<div class="setting">
+			<label for="apertureSelect">Aperture</label>
+			<select id="apertureSelect"></select>
+		</div>
+		<div class="setting">
+			<label for="whiteBalanceSelect">White Balance</label>
+			<select id="whiteBalanceSelect"></select>
+		</div>
 	</div>
-</div>
-<div id="cameraOptions">
-	<p>This is where the camera options will go. Things like ISO and exposure time.</p>
-	<div class="setting">
-		<label for="isoSelect">ISO</label>
-		<select id="isoSelect"></select>
-	</div>
-	<div class="setting">
-		<label for="shutterSpeedSelect">Shutter Speed</label>
-		<select id="shutterSpeedSelect"></select>
-	</div>
-	<div class="setting">
-		<label for="apertureSelect">Aperture</label>
-		<select id="apertureSelect"></select>
-	</div>
-	<div class="setting">
-		<label for="whiteBalanceSelect">White Balance</label>
-		<select id="whiteBalanceSelect"></select>
-	</div>
-</div>
 </body>
 </html>
