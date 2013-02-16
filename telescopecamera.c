@@ -318,6 +318,20 @@ int tc_preview(const char * name) {
 	}
 }
 
+bool tc_connected() {
+	pthread_mutex_lock(&lock);
+	// if we can init the camera we assume its connected.
+	initCamaraAndContext();
+	
+	if( initFailed ) {
+		pthread_mutex_unlock(&lock);
+		return false;
+	}
+	pthread_mutex_unlock(&lock);
+	return true;
+}
+	
+
 int tc_get_setting(const char * setting, char * result, size_t size_of) {
 
 	pthread_mutex_lock(&lock);

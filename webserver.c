@@ -197,7 +197,21 @@ static void *callback(enum mg_event event, struct mg_connection *conn) {
 
 	if (event == MG_NEW_REQUEST) {
 		const struct mg_request_info *request_info = mg_get_request_info(conn);
-		
+		// before loading up the index page check for existence of a camera.
+		if(strcmp(request_info->uri, "/") == 0) {
+			if(tc_connected()) {
+				return NULL; // return null so it goes to the normal index page.
+			}
+			else {
+				mg_printf(conn,
+					"HTTP/1.1 307 Temporary Redirect\r\n"
+					"Location: /nocamera.lp\r\n"
+					"content_length: 0\r\n"
+					"Content-Type: text/html\r\n\r\n" 
+				);
+				return "";
+			}
+		}
 		// check for internal urls and then if we don't find one of our magic ones fall back.
 		if( strcmp(request_info->uri, SUMMARY_URL) == 0 ){
 			return processSummary(conn, request_info);

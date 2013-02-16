@@ -46,4 +46,10 @@ int tc_get_setting(const char * setting, char * result, size_t size_of);
  */
 int tc_settings(FILE * output);
 
+/**
+ * returns true if there appears to be a camera connected,
+ */
+bool tc_connected();
+
+
 #endif
