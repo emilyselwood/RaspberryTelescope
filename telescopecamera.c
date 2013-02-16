@@ -142,7 +142,7 @@ GPContext* create_context() {
 void initCamaraAndContext() {
 	
 	if(resetNextTime) {
-		resetCamera();
+		tc_reset();
 		resetNextTime = false;
 	}
 	
@@ -152,7 +152,7 @@ void initCamaraAndContext() {
 		
 		if( gp_camera_init (camera, context) < GP_OK ) {
 			initFailed = true;
-			resetCamera();
+			tc_reset();
 		}
 		else {
 			canon_enable_capture(camera, 1, context);
@@ -161,7 +161,7 @@ void initCamaraAndContext() {
 	}
 }
 
-void resetCamera() {
+void tc_reset() {
 	gp_camera_exit(camera, context);
 	gp_camera_free (camera);
 
@@ -202,7 +202,7 @@ int waitForCaptureComplete() {
  * 
  * takes a string buffer to put the information in and returns the length writen.
  */
-int getCamaraSummary(char * content, const int sizeOfContent) {
+int tc_get_summary(char * content, const int size_of) {
 
 	CameraText text;
 	int content_length = 0;
@@ -211,24 +211,24 @@ int getCamaraSummary(char * content, const int sizeOfContent) {
 	initCamaraAndContext();
 
 	if( initFailed ) {
-		content_length = snprintf(content, sizeOfContent, "No camera detected");
+		content_length = snprintf(content, size_of, "No camera detected");
 	}
 	else {
 		ret = gp_camera_get_summary (camera, &text, context);
 		if (ret < GP_OK) {
 			// here we will try and reset the camara so next time some one tries to use it hopefully it will re init.
-			resetCamera();
-			content_length = snprintf(content, sizeOfContent, "Camera failed retrieving summary.");
+			tc_reset();
+			content_length = snprintf(content, size_of, "Camera failed retrieving summary.");
 		}
 		else {
-			content_length = snprintf(content, sizeOfContent, "Summary info from camara:\n %s",text.text);
+			content_length = snprintf(content, size_of, "Summary info from camara:\n %s",text.text);
 		}
 	}
 
 	return content_length;
 }
 
-int takePicture(const char * fileName, const bool deleteFromCamera) {
+int tc_take_picture(const char * name, const bool delete) {
 
 	pthread_mutex_lock(&lock);
 	
@@ -244,15 +244,15 @@ int takePicture(const char * fileName, const bool deleteFromCamera) {
 
 		/* NOP: This gets overridden in the library to /capt0000.jpg */
 		strcpy(camera_file_path.folder, "/");
-		strcpy(camera_file_path.name, fileName);
+		strcpy(camera_file_path.name, name);
 
 		gp_camera_capture(camera, GP_CAPTURE_IMAGE, &camera_file_path, context);
 
-		int fd = open(fileName, O_CREAT | O_WRONLY, 0644);
+		int fd = open(name, O_CREAT | O_WRONLY, 0644);
 		gp_file_new_from_fd(&canonfile, fd);
 		gp_camera_file_get(camera, camera_file_path.folder, camera_file_path.name, GP_FILE_TYPE_NORMAL, canonfile, context);
 
-		if(deleteFromCamera) {
+		if(delete) {
 			gp_camera_file_delete(camera, camera_file_path.folder, camera_file_path.name, context);
 		}
 
@@ -262,12 +262,12 @@ int takePicture(const char * fileName, const bool deleteFromCamera) {
 	}
 }
 
-int takeNPictures(const int n, const char * fileName, const char * postfix, const bool deleteFromCamera) {
+int tc_take_n_pictures(const int n, const char * name, const char * postfix, const bool delete) {
 	int res;
 	for(int i = 0; i < n; i++) {
 		char entryName[100];
-		snprintf(entryName, 100, "%s-%d.%s", fileName, i, postfix);
-		res = takePicture(entryName, deleteFromCamera);
+		snprintf(entryName, 100, "%s-%d.%s", name, i, postfix);
+		res = tc_take_picture(entryName, delete);
 		if(res < 0) {
 			return -1;
 		}
@@ -275,7 +275,7 @@ int takeNPictures(const int n, const char * fileName, const char * postfix, cons
 	return 1;
 }
 
-int capturePreview(const char * fileName) {
+int tc_preview(const char * name) {
 
 	pthread_mutex_lock(&lock);
 	
@@ -291,7 +291,7 @@ int capturePreview(const char * fileName) {
 		int retval = gp_file_new(&file);
 		if (retval != GP_OK) {
 			fprintf(stderr,"gp_file_new: %d\n", retval);
-			resetCamera();
+			tc_reset();
 			pthread_mutex_unlock(&lock);
 			return -1;
 		}
@@ -304,11 +304,11 @@ int capturePreview(const char * fileName) {
 			return -1;
 		}
 
-		retval = gp_file_save(file, fileName);
+		retval = gp_file_save(file, name);
 		if (retval != GP_OK) {
 			fprintf(stderr,"gp_file_save: %d\n", retval);
 			gp_file_unref(file);
-			resetCamera();
+			tc_reset();
 			pthread_mutex_unlock(&lock);
 			return -1;
 		}
@@ -318,7 +318,7 @@ int capturePreview(const char * fileName) {
 	}
 }
 
-int getSetting(const char * setting, char * result, size_t resultLength) {
+int tc_get_setting(const char * setting, char * result, size_t size_of) {
 
 	pthread_mutex_lock(&lock);
 	
@@ -352,7 +352,7 @@ int getSetting(const char * setting, char * result, size_t resultLength) {
 		}
 
 		/* Create a new copy for our caller. */
-		snprintf(result, resultLength, "%s", val);
+		snprintf(result, size_of, "%s", val);
 
 		gp_widget_free (widget);
 		pthread_mutex_unlock(&lock);
@@ -360,7 +360,7 @@ int getSetting(const char * setting, char * result, size_t resultLength) {
 	}
 }
 
-int setSetting(const char * setting, const char * newValue) {
+int tc_set_setting(const char * setting, const char * value) {
 	
 	pthread_mutex_lock(&lock);
 	initCamaraAndContext();
@@ -380,7 +380,7 @@ int setSetting(const char * setting, const char * newValue) {
 			return ret;
 		}
 		
-		ret = gp_widget_set_value(child, newValue);
+		ret = gp_widget_set_value(child, value);
 		if (ret < GP_OK) {
 			fprintf (stderr, "could not set widget value: %d\n", ret);
 			gp_widget_free (widget);
@@ -403,7 +403,7 @@ int setSetting(const char * setting, const char * newValue) {
 	}
 }
 
-int enumerateSettings(FILE * outputStream) {
+int tc_settings(FILE * output) {
 	pthread_mutex_lock(&lock);
 	initCamaraAndContext();
 
@@ -413,6 +413,9 @@ int enumerateSettings(FILE * outputStream) {
 	}
 	else {
 		CameraWidget * widget = NULL; // will hold the root config entry
+			// the config entries make a tree structure.
+			// each node has differnt types. Only some can be branches
+			// others are always leaves.
 		int ret = gp_camera_get_config (camera, &widget, context);
 		if (ret < GP_OK) {
 			fprintf (stderr, "camera_get_config failed: %d\n", ret);
@@ -421,35 +424,36 @@ int enumerateSettings(FILE * outputStream) {
 			return -1;
 		}
 		
+		// helper function to pring a entry out, needs to be passed the value as a string.
 		void printValue(CameraWidget * widget, const int depth, const char *name, const char * value) {
 			int choicesCount;
 			
-			fprintf(outputStream, "\"%s\" : {\n", name);
-			indent(outputStream, depth+1);
-			fprintf(outputStream, "\"value\" : \"%s\"", value);
+			fprintf(output, "\"%s\" : {\n", name);
+			indent(output, depth+1);
+			fprintf(output, "\"value\" : \"%s\"", value);
 			
 			choicesCount = gp_widget_count_choices(widget);
 			if(choicesCount > 0) {
-				fprintf(outputStream, ",\n");
-				indent(outputStream, depth + 1);
-				fprintf(outputStream, "\"choices\" : [");
+				fprintf(output, ",\n");
+				indent(output, depth + 1);
+				fprintf(output, "\"choices\" : [");
 				for(int i = 0; i < choicesCount; i++) {
 					const char * choice;
 					ret = gp_widget_get_choice(widget, i, &choice);
 					if(ret == GP_OK) {
-						fprintf(outputStream, "\"%s\"", choice);
+						fprintf(output, "\"%s\"", choice);
 					}
 					if(i < (choicesCount -1)) {
-						fprintf(outputStream, ",");
+						fprintf(output, ",");
 					}
 				}
-				fprintf(outputStream, "]\n");
+				fprintf(output, "]\n");
 			}
 			else {
-				fprintf(outputStream, "\n");
+				fprintf(output, "\n");
 			}
-			indent(outputStream, depth);
-			fprintf(outputStream, "}");
+			indent(output, depth);
+			fprintf(output, "}");
 		}
 		
 		// internal tree walking function
@@ -462,17 +466,17 @@ int enumerateSettings(FILE * outputStream) {
 				return -1;
 			}
 			CameraWidgetType type;
-			indent(outputStream, depth);
+			indent(output, depth);
 			
 			ret = gp_widget_get_type (widget, &type);
 			switch (type) {
 				case GP_WIDGET_WINDOW:
-				case GP_WIDGET_SECTION:
-					fprintf(outputStream, "\"%s\"", name);
+				case GP_WIDGET_SECTION: // these are branch nodes.
+					fprintf(output, "\"%s\"", name);
 					
 					int count = gp_widget_count_children(widget);
 					if(count > 0) {
-						fprintf(outputStream, " : {\n");
+						fprintf(output, " : {\n");
 					}
 					int newDepth = depth + 1;
 					for (int i = 0; i < count; i++) {
@@ -483,18 +487,18 @@ int enumerateSettings(FILE * outputStream) {
 					}
 					
 					if(count > 0) {
-						indent(outputStream, depth);
-						fprintf(outputStream, "}");
+						indent(output, depth);
+						fprintf(output, "}");
 					}
 				break;
 				case GP_WIDGET_MENU:
 				case GP_WIDGET_RADIO:
-				case GP_WIDGET_TEXT:
+				case GP_WIDGET_TEXT: // these are all easy text nodes
 					gp_widget_get_value(widget, &value);
 					printValue(widget, depth, name, (char *) value);
 				break;	
-				case GP_WIDGET_TOGGLE:	// with these the value of the pointer is the actual value.
-				case GP_WIDGET_DATE:
+				case GP_WIDGET_TOGGLE:	
+				case GP_WIDGET_DATE: // with these the pointer returned is the value rather than a pointer.
 					gp_widget_get_value(widget, &value);
 					char str[15];
 					snprintf(str, 15, "%d", ((int)value));
@@ -502,22 +506,24 @@ int enumerateSettings(FILE * outputStream) {
 					printValue(widget, depth, name, str);
 				break;
 			default:
-				fprintf(outputStream, "\"%s\" : \"has bad type %d\"", name, type);
+				fprintf(output, "\"%s\" : \"has bad type %d\"", name, type);
 			}
 			
+			// json output, no commas after the last object
 			if(!last) {
-				fprintf(outputStream, ",");
+				fprintf(output, ",");
 			}
-			fprintf(outputStream, "\n");
+			fprintf(output, "\n");
 			
 			return 0;
 		}
 		
-		fprintf(outputStream, "{\n");
+		// the main bit of code for this function.
+		fprintf(output, "{\n");
 		ret = displayChildren(widget, 1, true);
-		fprintf(outputStream, "}\n");
+		fprintf(output, "}\n");
 		
-		fflush(outputStream);
+		fflush(output);
 		
 		gp_widget_free(widget);
 		pthread_mutex_unlock(&lock);

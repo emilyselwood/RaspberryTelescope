@@ -8,13 +8,24 @@
 
 #include "stringutils.h"
 
-int listImageDirectory(const char * path, FILE * outputStream) {
+
+void print_entry(FILE * output, const char * key, const char * value) {
+	indent(output, 3);
+	fprintf(output, "\"%s\" : \"%s\",\n", key, value);
+}
+
+void print_int_entry(FILE * output, const char * key, const int value) {
+	indent(output, 3);
+	fprintf(output, "\"%s\" : \"%d\",\n", key, value);
+}
+
+int list_img_dir(const char * path, FILE * output) {
 
 	DIR *dir;
 
 	if ((dir = opendir (path)) != NULL) {
 		
-		fprintf(outputStream, "{\n\t\"files\" : [\n");
+		fprintf(output, "{\n\t\"files\" : [\n");
 		struct dirent *ent;
 		int pathLength = strlen(path);
 		bool first = true;
@@ -31,25 +42,22 @@ int listImageDirectory(const char * path, FILE * outputStream) {
 						first = false;
 					}
 					else {
-						fprintf(outputStream, ",\n");
+						fprintf(output, ",\n");
 					}
-					indent(outputStream, 2);
-					fprintf(outputStream, "{\n");
-					indent(outputStream, 3);
-					fprintf(outputStream, "\"name\" : \"%s\",\n", ent->d_name);
-					indent(outputStream, 3);
-					fprintf(outputStream, "\"size\" : \"%d\",\n", (int)fileStat.st_size);
-					indent(outputStream, 3);
-					fprintf(outputStream, "\"date\" : \"%d\"\n", (int)fileStat.st_mtime);
-					indent(outputStream, 2);
-					fprintf(outputStream, "}");
+					indent(output, 2);
+					fprintf(output, "{\n");
+					print_entry(output, "name", ent->d_name);
+					print_int_entry(output, "size", (int)fileStat.st_size);
+					print_int_entry(output, "date", (int)fileStat.st_mtime);
+					indent(output, 2);
+					fprintf(output, "}");
 				}
 				free(fullname);
 			}
 		}
 		closedir (dir);
-		fprintf(outputStream, "\n\t]\n}\n");
-		fflush(outputStream);
+		fprintf(output, "\n\t]\n}\n");
+		fflush(output);
 		return 0;
 	}
 	else {
@@ -57,3 +65,4 @@ int listImageDirectory(const char * path, FILE * outputStream) {
 		return -1;
 	}
 }
+

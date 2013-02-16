@@ -7,6 +7,6 @@
 /**
  * create a json blob listing the contence of the file
  */
-int listImageDirectory(const char * path, FILE * outputStream);
+int list_img_dir(const char * path, FILE * output);
 
 #endif

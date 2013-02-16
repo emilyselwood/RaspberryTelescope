@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-size_t nullSafeStrLen(const char * string) {
+size_t n_strlen(const char * string) {
 	if(string == NULL) {
 		return 0;
 	}
@@ -12,28 +12,28 @@ size_t nullSafeStrLen(const char * string) {
 	}
 }
 
-bool extractBoolQueryParam(const struct mg_request_info *request_info, const char * paramKey) {
-	return extractBoolQueryParamDefault(request_info, paramKey, false);
+bool bool_query_param(const struct mg_request_info *request_info, const char * param) {
+	return bool_query_param_def(request_info, param, false);
 }
 
-bool extractBoolQueryParamDefault(const struct mg_request_info *request_info, const char * paramKey, const bool def) {
+bool bool_query_param_def(const struct mg_request_info *request_info, const char * param, const bool def) {
 	char queryParam[10];
-	size_t queryLength = nullSafeStrLen(request_info->query_string);
-	int res = mg_get_var(request_info->query_string, queryLength, paramKey, queryParam, 10);
+	size_t queryLength = n_strlen(request_info->query_string);
+	int res = mg_get_var(request_info->query_string, queryLength, param, queryParam, 10);
 	if(res > 0) {
 		return (queryParam[0] == '1');
 	}
 	return def;
 }
 
-int extractStringQueryParam(const struct mg_request_info *request_info, const char * paramKey, char * buffer, const int length) {
-	size_t queryLength = nullSafeStrLen(request_info->query_string);
+int str_query_param(const struct mg_request_info *request_info, const char * param, char * buffer, const int length) {
+	size_t queryLength = n_strlen(request_info->query_string);
 
-	return mg_get_var(request_info->query_string, queryLength, paramKey, buffer, length);
+	return mg_get_var(request_info->query_string, queryLength, param, buffer, length);
 }
 
-int extractStringQueryParamDefault(const struct mg_request_info *request_info, const char * paramKey, const char * def, char * buffer, const int length) {
-	int res = extractStringQueryParam(request_info, paramKey, buffer, length);
+int str_query_param_def(const struct mg_request_info *request_info, const char * param, const char * def, char * buffer, const int length) {
+	int res = str_query_param(request_info, param, buffer, length);
 	
 	if( res < 0 ) {
 		strncpy(buffer, def, length);
@@ -42,13 +42,13 @@ int extractStringQueryParamDefault(const struct mg_request_info *request_info, c
 	return res;
 }
 
-int extractIntQueryParam(const struct mg_request_info *request_info, const char *paramKey) {
+int int_query_param(const struct mg_request_info *request_info, const char *param) {
 	char buffer[20];
-	int res = extractStringQueryParam(request_info, paramKey, buffer, 20);
+	int res = str_query_param(request_info, param, buffer, 20);
 	if( res < 0 ) {
 		return 0;
 	}
-	if(isInteger(buffer)) {
+	if(is_int(buffer)) {
 		return atoi(buffer);
 	}
 	else {
@@ -56,14 +56,16 @@ int extractIntQueryParam(const struct mg_request_info *request_info, const char 
 	}
 }
 
-bool isInteger(const char * s)
+bool is_int(const char * s)
 {
-   if(s == NULL || *s == '\0') return false ;
+	if(s == NULL || *s == '\0') {
+		return false;
+	}
 
-   char * p ;
-   strtol(s, &p, 10) ;
+	char * p ;
+	strtol(s, &p, 10) ;
 
-   return (*p == 0) ;
+	return (*p == 0) ;
 }
 
 void indent(FILE * outputStream, const int depth) {

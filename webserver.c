@@ -56,7 +56,7 @@ void *returnResult(struct mg_connection *conn, const int status, const char * st
 void *processSummary(struct mg_connection *conn, const struct mg_request_info *request_info) {
 	printf("Getting Summary info\n");
 	char content[4084];
-	int content_length = getCamaraSummary(content, sizeof(content));
+	int content_length = tc_get_summary(content, sizeof(content));
 
 	return returnResult(conn, 200, "OK", content, content_length );
 }
@@ -65,7 +65,7 @@ void *processCapture(struct mg_connection *conn, const struct mg_request_info *r
 
 	printf("Capturing image\n");
 
-	int captureCount = extractIntQueryParam(request_info, "i");
+	int captureCount = int_query_param(request_info, "i");
 	char resultFileName[500];
 
 	char timeStampedName[19];
@@ -76,12 +76,12 @@ void *processCapture(struct mg_connection *conn, const struct mg_request_info *r
 	else {
 		strftime(timeStampedName, 19, "%Y%m%d%H%M%S.jpg", localtime(&t));
 	}
-	extractStringQueryParamDefault(request_info, "n", timeStampedName, resultFileName, 500);
+	str_query_param_def(request_info, "n", timeStampedName, resultFileName, 500);
 
 	
 	
-	bool shouldSendBack = extractBoolQueryParam(request_info, "r");
-	bool shouldDelete = extractBoolQueryParam(request_info, "d");
+	bool shouldSendBack = bool_query_param(request_info, "r");
+	bool shouldDelete = bool_query_param(request_info, "d");
 
 	char outputPath[500];
 	sprintf(outputPath, "webRoot/img/%s", resultFileName);
@@ -89,10 +89,10 @@ void *processCapture(struct mg_connection *conn, const struct mg_request_info *r
 	int res;
 	if(captureCount > 1) {
 		printf("about to try and capture %d pictures with name %s\n", captureCount, outputPath);
-		res = takeNPictures(captureCount, outputPath, "jpg", shouldDelete);
+		res = tc_take_n_pictures(captureCount, outputPath, "jpg", shouldDelete);
 	}
 	else {
-		res = takePicture(outputPath, shouldDelete);
+		res = tc_take_picture(outputPath, shouldDelete);
 	}
 	
 	if(res > 0) {
@@ -126,7 +126,7 @@ void *processPreview(struct mg_connection *conn, const struct mg_request_info *r
 	char outputPath[500];
 	sprintf(outputPath, "%s/%s", path, resultFileName);
 
-	if(capturePreview(outputPath) == 0) {
+	if(tc_preview(outputPath) == 0) {
 		mg_send_file(conn, outputPath);
 	}
 	else {
@@ -142,7 +142,7 @@ void * processSettings(struct mg_connection *conn, const struct mg_request_info 
     size_t size;
 	FILE * stream = open_memstream(&buffer, &size);
 	
-	enumerateSettings(stream);
+	tc_settings(stream);
 	
 	fclose(stream);
 	returnResult(conn, 200, "OK", buffer, size);
@@ -154,15 +154,15 @@ void * processSetSetting(struct mg_connection *conn, const struct mg_request_inf
 	char key[50];
 	char value[50];
 
-	int keyLength = extractStringQueryParam(request_info, "k", key, 50);
-	int valueLength = extractStringQueryParam(request_info, "v", value, 50);
+	int keyLength = str_query_param(request_info, "k", key, 50);
+	int valueLength = str_query_param(request_info, "v", value, 50);
 	
 	if(keyLength <= 0 || valueLength <= 0) {
 		const char * message = "Missing setting information";
 		return returnResult(conn, 400, message, message, strlen(message));
 	}
 	else {
-		int res = setSetting(key, value);
+		int res = tc_set_setting(key, value);
 		if(res == 0) {
 			return returnResult(conn, 200, "OK", "", 0);	
 		}
@@ -179,7 +179,7 @@ void * processListImages(struct mg_connection *conn, const struct mg_request_inf
     size_t size;
 	FILE * stream = open_memstream(&buffer, &size);
 
-	listImageDirectory("webRoot/img/", stream);
+	list_img_dir("webRoot/img/", stream);
 
 	fclose(stream);
 	returnResult(conn, 200, "OK", buffer, size);
@@ -272,7 +272,7 @@ int main(void) {
 	if(stat(path,&st) != 0) {
 		fprintf(stderr, "Error preview path doesn't seem to exist. %s\n", path);
 		config_destroy(&cfg);
-		resetCamera(); // just in case.
+		tc_reset(); // just in case.
 		return -2;
 	}
 	
@@ -294,7 +294,7 @@ int main(void) {
 	mg_stop(ctx);
 
 	// make sure we reset the camara.
-	resetCamera();
+	tc_reset();
 	config_destroy(&cfg);
 	return 0;
 }

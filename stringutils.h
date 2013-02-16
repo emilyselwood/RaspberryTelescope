@@ -6,18 +6,18 @@
 
 #include "mongoose.h"
 
-size_t nullSafeStrLen(const char * string);
+size_t n_strlen(const char * string);
 
-bool extractBoolQueryParam(const struct mg_request_info *request_info, const char *paramKey);
-bool extractBoolQueryParamDefault(const struct mg_request_info *request_info, const char *paramKey, const bool def);
+bool bool_query_param(const struct mg_request_info *request_info, const char *param);
+bool bool_query_param_def(const struct mg_request_info *request_info, const char *param, const bool def);
 
-int extractStringQueryParam(const struct mg_request_info *request_info, const char *paramKey, char *buffer, const int length);
-int extractStringQueryParamDefault(const struct mg_request_info *request_info, const char *paramKey, const char *def, char *buffer, const int length);
+int str_query_param(const struct mg_request_info *request_info, const char *param, char *buffer, const int length);
+int str_query_param_def(const struct mg_request_info *request_info, const char *param, const char *def, char *buffer, const int length);
 
 // this one always returns zero as a default value.
-int extractIntQueryParam(const struct mg_request_info *request_info, const char *paramKey);
+int int_query_param(const struct mg_request_info *request_info, const char *param);
 
-bool isInteger(const char * s);
+bool is_int(const char * s);
 
 void indent(FILE * outputStream, int depth);
 

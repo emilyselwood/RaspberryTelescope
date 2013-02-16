@@ -151,12 +151,14 @@
 			$("#captureOptions").hide();
 			$("#cameraOptions").hide();
 			
+			setTimeout(updateImage, 1000);
+			
 			$.getJSON("/settings", handleJSONSettings);
 		});
 	
 	</script>
 </head>
-<body onload="setTimeout(updateImage, 1000);">
+<body>
 	<div class="menu">
 		<button id="captureButton" onclick="captureButtonClick" >Capture</button>
 
@@ -181,7 +183,7 @@
 		</div>
 		<div class="setting">
 			<label for="captureName">File Name:</label>
-			<input type="text" <? print('value=' .. findParam(request_info.query_string, 'n=', '')) ?> id="captureName" />
+			<input type="text" <? print('value=\"' .. findParam(request_info.query_string, 'n=', '') .. '\"') ?> id="captureName" />
 			Warning if the file already exists it will be overwritten. Leave blank for a date stamped file name.
 		</div>
 		<div class="setting">
