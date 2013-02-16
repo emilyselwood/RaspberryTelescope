@@ -20,3 +20,11 @@ a {
 	margin-bottom: 1em;
 	margin-left: 2em;
 }
+
+.noCamMessage {
+	margin: 2em;
+}
+
+.retryButton {
+	margin-left: 2em;	
+}

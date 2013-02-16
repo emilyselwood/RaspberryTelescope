@@ -8,10 +8,15 @@
 	<link href="jquery-ui/jquery-ui-1.10.0.custom.css" rel="stylesheet" type="text/css" />
 	<script src="jquery-ui/jquery-1.9.0.js"></script>
 	<script src="jquery-ui/jquery-ui-1.10.0.custom.js"></script>
-	
+	<script>
+		$(function() {
+			$( "#retry" ).button();
+		});
+	</script>
 </head>
 <body>
-	Could not detect a camera connected. Connect one and click <a href="/">here</a>
+	<div class="noCamMessage">Could not detect a camera. Make sure the camera is connected and turned on. </div>
+	<div class="retryButton"><a href="/" id="retry">Retry</a></div>
 </body>
  </html>
  
