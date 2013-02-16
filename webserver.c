@@ -78,7 +78,12 @@ void *processCapture(struct mg_connection *conn, const struct mg_request_info *r
 	}
 	str_query_param_def(request_info, "n", timeStampedName, resultFileName, 500);
 
-	
+	if(contains_path_chars(resultFileName)) {
+		printf("Invalid file name %s\n", resultFileName);
+		const char * message = "Invalid file name";
+		returnResult(conn, 400, message, message, strlen(message));
+		return "";
+	}
 	
 	bool shouldSendBack = bool_query_param(request_info, "r");
 	bool shouldDelete = bool_query_param(request_info, "d");

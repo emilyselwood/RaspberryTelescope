@@ -34,7 +34,6 @@ int str_query_param(const struct mg_request_info *request_info, const char * par
 
 int str_query_param_def(const struct mg_request_info *request_info, const char * param, const char * def, char * buffer, const int length) {
 	int res = str_query_param(request_info, param, buffer, length);
-	
 	if( res < 0 ) {
 		strncpy(buffer, def, length);
 		return strlen(def);
@@ -56,8 +55,7 @@ int int_query_param(const struct mg_request_info *request_info, const char *para
 	}
 }
 
-bool is_int(const char * s)
-{
+bool is_int(const char * s) {
 	if(s == NULL || *s == '\0') {
 		return false;
 	}
@@ -66,6 +64,19 @@ bool is_int(const char * s)
 	strtol(s, &p, 10) ;
 
 	return (*p == 0) ;
+}
+
+bool contains_path_chars(const char * s) {
+	int len = n_strlen(s);
+	for(int i = 0; i < len; i++) {
+		if(s[i] == '/') {
+			return true;
+		}
+		if(s[i] == '.' && s[i+1] == '.') {
+			return true;
+		}
+	}
+	return false;
 }
 
 void indent(FILE * outputStream, const int depth) {

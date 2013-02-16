@@ -19,6 +19,9 @@ int int_query_param(const struct mg_request_info *request_info, const char *para
 
 bool is_int(const char * s);
 
+// returns true if the given string s contains / or .. 
+bool contains_path_chars(const char * s);
+
 void indent(FILE * outputStream, int depth);
 
 #endif
