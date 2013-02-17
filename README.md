@@ -12,11 +12,11 @@ Features
 * Capture to server or return immedatly to browser
 * Burst Mode
 * Controlled through a web browser
+* Browse captured images
 
 Roadmap
 -------
 
-* Browse captured images
 * Time laps 
 * Capture video
 
