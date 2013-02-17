@@ -11,12 +11,13 @@
 	<script>
 		$(function() {
 			$( "#retry" ).button();
+			$("#gallery").button();
 		});
 	</script>
 </head>
 <body>
 	<div class="noCamMessage">Could not detect a camera. Make sure the camera is connected and turned on.</div>
-	<div class="retryButton"><a href="/" id="retry">Retry</a></div>
+	<div class="retryButton"><a href="/" id="retry">Retry</a><a id="gallery" href="/gallery.lp">Gallery</a></div>
 </body>
 </html>
  

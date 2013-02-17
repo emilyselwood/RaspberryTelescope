@@ -147,6 +147,8 @@
 				
 			$("#optionsButtonSet").buttonset();
 			
+			$("#galleryLink").button();
+			
 			$("#previewDiv").show();
 			$("#captureOptions").hide();
 			$("#cameraOptions").hide();
@@ -167,7 +169,9 @@
 			<input type="radio" name="optionsButtonSet" id="captureOptionsButton" /><label for="captureOptionsButton">Capture</label>
 			<input type="radio" name="optionsButtonSet" id="cameraOptionsButton" /><label for="cameraOptionsButton">Camera</label>
 		</span>
+		<a id="galleryLink" href="gallery.lp">Gallery</a>
 		<span id="tick">-50</span>
+		
 	</div>
 	<div id="previewDiv">
 		<img id="previewImage" src="/preview" />
