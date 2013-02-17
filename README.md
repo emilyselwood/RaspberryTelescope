@@ -1,7 +1,7 @@
 Raspberry Telescope
 ===================
 
-This a simple project to allow remote control of a digital camara through a web browser.
+A project to allow remote control of a digital camara through a web browser.
 
 Features
 --------
@@ -85,17 +85,22 @@ There is a list of compatible cameras on the [gphoto2 website] (http://www.gphot
 Project Structure
 -----------------
 
-* webserver.c contains the main function along with all the code for dealing with the Mongoose webserver. There are three "services" 
-    * /preview - generates a preview image (used for the live preview on the index page)
-    * /capture - actually captures an image and returns it to the browser.
-    * /summary - returns the summary information from the camera. This can be useful for debugging whats going on.
-    * /settings - returns a JSON feed of the settings currently in the camera.
-    * /setsetting - takes a key and value and updates a setting on the camera.
-    * /listimages - returns a json file listing of all the images in the webRoot/img folder. Does not return hidden files. Result is inode ordered. Sort client side.
+* webserver.c contains the main function along with all the code for dealing with the Mongoose webserver.
 * telescopecamera.c / .h contains all the code for interfacing with the camera.
 * stringutils.c / .h some string helper functions.
 * fileutils.c /.h code for dealing with the file system.
 * mongoose.c / .h all the code for the mongoose web server.
+
+Services
+--------
+
+* /preview - generates a preview image (used for the live preview on the index page)
+* /capture - actually captures an image and returns it to the browser.
+* /summary - returns the summary information from the camera. This can be useful for debugging whats going on.
+* /settings - returns a JSON feed of the settings currently in the camera.
+* /setsetting - takes a key and value and updates a setting on the camera.
+* /listimages - returns a json file listing of all the images in the save folder. Does not return hidden files. Result is inode ordered. Sort client side.
+* /image - takes the name of an image and returns it to the requester. Abstracts away the path images are saved to.
 
 The /capture service takes several query parameters:
 * n=[filename] this alows you to pass the name to save the picture with.
@@ -106,6 +111,9 @@ The /capture service takes several query parameters:
 The /setsetting service takes two query parameters:
 * k=[setting name] this is the name of the setting you want to update.
 * v=[new value] this is the new value for the setting you want to update.
+
+The /image service takes a single query parameter:
+* n=[image name] 
 
 
 
