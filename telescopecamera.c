@@ -15,7 +15,7 @@ GPContext *context = NULL;
 bool initFailed = false;
 bool resetNextTime = false;
 
-int crudeLock = 0;
+// big camera lock. Used around all the public functions to prevent multiple threads trying to access this at the same time.
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 // error logging function for things failing in the gphoto2 library.
@@ -438,7 +438,7 @@ int tc_settings(FILE * output) {
 			return -1;
 		}
 		
-		// helper function to pring a entry out, needs to be passed the value as a string.
+		// Helper function to print an entry out, needs to be passed the value as a string.
 		void printValue(CameraWidget * widget, const int depth, const char *name, const char * value) {
 			int choicesCount;
 			
@@ -446,6 +446,8 @@ int tc_settings(FILE * output) {
 			indent(output, depth+1);
 			fprintf(output, "\"value\" : \"%s\"", value);
 			
+			// If this setting has a fixed list of options we will return those as well.
+			// For instance iso can be one of "Auto","100","200","400","800","1600","3200","6400" on a Cannon 550D
 			choicesCount = gp_widget_count_choices(widget);
 			if(choicesCount > 0) {
 				fprintf(output, ",\n");
@@ -485,7 +487,7 @@ int tc_settings(FILE * output) {
 			ret = gp_widget_get_type (widget, &type);
 			switch (type) {
 				case GP_WIDGET_WINDOW:
-				case GP_WIDGET_SECTION: // these are branch nodes.
+				case GP_WIDGET_SECTION: // These are branch nodes.
 					fprintf(output, "\"%s\"", name);
 					
 					int count = gp_widget_count_children(widget);

@@ -9,14 +9,26 @@
 #include "stringutils.h"
 
 
-void print_entry(FILE * output, const char * key, const char * value) {
+void print_entry(FILE * output, const char * key, const char * value, const bool comma) {
 	indent(output, 3);
-	fprintf(output, "\"%s\" : \"%s\",\n", key, value);
+	fprintf(output, "\"%s\" : \"%s\"", key, value);
+	if(comma) {
+		fprintf(output, ",\n");
+	}
+	else {
+		fprintf(output, "\n");
+	}
 }
 
-void print_int_entry(FILE * output, const char * key, const int value) {
+void print_int_entry(FILE * output, const char * key, const int value, const bool comma) {
 	indent(output, 3);
-	fprintf(output, "\"%s\" : \"%d\",\n", key, value);
+	fprintf(output, "\"%s\" : \"%d\"", key, value);
+	if(comma) {
+		fprintf(output, ",\n");
+	}
+	else {
+		fprintf(output, "\n");
+	}
 }
 
 int list_img_dir(const char * path, FILE * output) {
@@ -46,9 +58,9 @@ int list_img_dir(const char * path, FILE * output) {
 					}
 					indent(output, 2);
 					fprintf(output, "{\n");
-					print_entry(output, "name", ent->d_name);
-					print_int_entry(output, "size", (int)fileStat.st_size);
-					print_int_entry(output, "date", (int)fileStat.st_mtime);
+					print_entry(output, "name", ent->d_name, true);
+					print_int_entry(output, "size", (int)fileStat.st_size, true);
+					print_int_entry(output, "date", (int)fileStat.st_mtime, false);
 					indent(output, 2);
 					fprintf(output, "}");
 				}
