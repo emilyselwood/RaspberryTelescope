@@ -66,3 +66,32 @@ int list_img_dir(const char * path, FILE * output) {
 	}
 }
 
+
+bool dir_exits(const char * path) {
+	struct stat st;
+	if(stat(path,&st) != 0) {
+		return false;
+	}
+	
+	if(S_ISDIR(st.st_mode)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool file_exists(const char * path) {
+	struct stat st;
+	if(stat(path,&st) != 0) {
+		return false;
+	}
+	
+	if(S_ISREG(st.st_mode)) {
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+

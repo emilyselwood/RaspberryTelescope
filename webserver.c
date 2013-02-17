@@ -37,6 +37,9 @@
 #define LIST_IMAGES_URL "/listimages"
 #define LIST_IMAGES_URL_LENGTH 11
 
+#define IMAGE_URL "/image"
+#define IMAGE_URL_LENGTH 6
+
 // global configuration as this will be accessed in the call backs.
 config_t cfg;
 
@@ -51,6 +54,10 @@ void *returnResult(struct mg_connection *conn, const int status, const char * st
             "%s",
             status, statusMessage, content_length+2, content);
 	return "";
+}
+
+void * returnError(struct mg_connection *conn, const int status, const char * statusMessage) {
+	return returnResult(conn, status, statusMessage, statusMessage, n_strlen(statusMessage));
 }
 
 void *processSummary(struct mg_connection *conn, const struct mg_request_info *request_info) {
@@ -80,16 +87,17 @@ void *processCapture(struct mg_connection *conn, const struct mg_request_info *r
 
 	if(contains_path_chars(resultFileName)) {
 		printf("Invalid file name %s\n", resultFileName);
-		const char * message = "Invalid file name";
-		returnResult(conn, 400, message, message, strlen(message));
-		return "";
+		return returnError(conn, 400, "Invalid file name");
 	}
 	
 	bool shouldSendBack = bool_query_param(request_info, "r");
 	bool shouldDelete = bool_query_param(request_info, "d");
 
+	const char *path;
+	config_lookup_string(&cfg, "capture.save_path", &path);
+	
 	char outputPath[500];
-	sprintf(outputPath, "webRoot/img/%s", resultFileName);
+	sprintf(outputPath, "%s%s", path, resultFileName);
 
 	int res;
 	if(captureCount > 1) {
@@ -115,8 +123,7 @@ void *processCapture(struct mg_connection *conn, const struct mg_request_info *r
 		}
 	}
 	else {
-		const char * message = "Failed to capture image";
-		returnResult(conn, 503, message, message, strlen(message));
+		returnError(conn, 503, "Failed to capture image");
 	}
 
 	return "";
@@ -135,8 +142,7 @@ void *processPreview(struct mg_connection *conn, const struct mg_request_info *r
 		mg_send_file(conn, outputPath);
 	}
 	else {
-		const char * message = "Failed to capture preview";
-		returnResult(conn, 503, message, message, strlen(message));
+		returnError(conn, 503, "Failed to capture preview");
 	}
 
 	return "";
@@ -163,8 +169,7 @@ void * processSetSetting(struct mg_connection *conn, const struct mg_request_inf
 	int valueLength = str_query_param(request_info, "v", value, 50);
 	
 	if(keyLength <= 0 || valueLength <= 0) {
-		const char * message = "Missing setting information";
-		return returnResult(conn, 400, message, message, strlen(message));
+		return returnError(conn, 400, "Missing setting information");
 	}
 	else {
 		int res = tc_set_setting(key, value);
@@ -172,8 +177,7 @@ void * processSetSetting(struct mg_connection *conn, const struct mg_request_inf
 			return returnResult(conn, 200, "OK", "", 0);	
 		}
 		else {
-			const char * message = "Failed to change setting";
-			return returnResult(conn, 503, message, message, strlen(message));
+			return returnError(conn, 503, "Failed to change setting");
 		}
 	}
 }
@@ -184,12 +188,46 @@ void * processListImages(struct mg_connection *conn, const struct mg_request_inf
     size_t size;
 	FILE * stream = open_memstream(&buffer, &size);
 
-	list_img_dir("webRoot/img/", stream);
+	const char *path;
+	config_lookup_string(&cfg, "capture.save_path", &path);
+	
+	list_img_dir(path, stream);
 
 	fclose(stream);
 	returnResult(conn, 200, "OK", buffer, size);
 	free(buffer);
 	return "";
+}
+
+
+void * processImage(struct mg_connection *conn, const struct mg_request_info *request_info) {
+	char name[100];
+
+	int nameLength = str_query_param(request_info, "n", name, 100);
+	
+	if(nameLength <= 0) {
+		return returnError(conn, 400, "Missing image name");
+	}
+	
+	if(contains_path_chars(name)) {
+		return returnError(conn, 400, "Invalid image name");
+	}
+	
+	const char * path;
+	config_lookup_string(&cfg, "capture.save_path", &path);
+	
+	int fullLength = n_strlen(path) + nameLength + 1;
+	
+	char * fullpath = (char*)malloc(sizeof(char) * fullLength + 1);
+	
+	snprintf(fullpath, fullLength, "%s%s", path, name); 
+	
+	printf("sending image: %s\n", fullpath);
+	mg_send_file(conn, fullpath);
+	
+	free(fullpath);
+	return "";
+	
 }
 
 static void *callback(enum mg_event event, struct mg_connection *conn) {
@@ -231,6 +269,9 @@ static void *callback(enum mg_event event, struct mg_connection *conn) {
 		else if( strncmp(request_info->uri, LIST_IMAGES_URL, LIST_IMAGES_URL_LENGTH) == 0) {
 			return processListImages(conn, request_info);
 		}
+		else if(strncmp(request_info->uri, IMAGE_URL, IMAGE_URL_LENGTH) == 0) {
+			return processImage(conn, request_info);
+		}
 		else {
 			// if we return null it falls out the end of this handler and tries the document_root to see if a file exists there.
 			return NULL;
@@ -239,6 +280,11 @@ static void *callback(enum mg_event event, struct mg_connection *conn) {
 	else {
 		return NULL;
 	}
+}
+
+void clean_up() {
+	config_destroy(&cfg);
+	tc_reset();
 }
 
 // signal handler so we actually get some idea where the hell this thing crashes.
@@ -268,7 +314,6 @@ void bt_sighandler(int sig) {
 	exit(0);
 }
 
-
 int main(void) {
 
 	signal(SIGSEGV, bt_sighandler);   // install our handler
@@ -280,18 +325,24 @@ int main(void) {
 	{
 		fprintf(stderr, "Error reading config file:\nLine %d - %s\n",
 				config_error_line(&cfg), config_error_text(&cfg));
-		config_destroy(&cfg);
+		clean_up();
 		return -1;
 	}
 
 	// check that the preview directory exists.
 	const char *path;
 	config_lookup_string(&cfg, "capture.preview_path", &path);
-	struct stat st;
-	if(stat(path,&st) != 0) {
+	if(!dir_exits(path)) {
 		fprintf(stderr, "Error preview path doesn't seem to exist. %s\n", path);
-		config_destroy(&cfg);
-		tc_reset(); // just in case.
+		clean_up();
+		return -2;
+	}
+	
+	const char *savePath;
+	config_lookup_string(&cfg, "capture.save_path", &savePath);
+	if(!dir_exits(savePath)) {
+		fprintf(stderr, "Error save path doesn't seem to exist. %s\n", savePath);
+		clean_up();
 		return -2;
 	}
 	
@@ -312,8 +363,6 @@ int main(void) {
 	getchar(); // Wait until user hits "enter"
 	mg_stop(ctx);
 
-	// make sure we reset the camara.
-	tc_reset();
-	config_destroy(&cfg);
+	clean_up();
 	return 0;
 }

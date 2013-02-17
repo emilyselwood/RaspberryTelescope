@@ -1,6 +1,6 @@
- <!doctype html>
- <html>
- <head>
+<!doctype html>
+<html>
+<head>
 	<meta charset="utf-8">
 	<title>Raspberry Telescope</title>
 	<link href="style.css" rel="stylesheet" type="text/css" />
@@ -15,8 +15,8 @@
 	</script>
 </head>
 <body>
-	<div class="noCamMessage">Could not detect a camera. Make sure the camera is connected and turned on. </div>
+	<div class="noCamMessage">Could not detect a camera. Make sure the camera is connected and turned on.</div>
 	<div class="retryButton"><a href="/" id="retry">Retry</a></div>
 </body>
- </html>
+</html>
  
