@@ -59,12 +59,17 @@
 			if($("#deleteSetting").is(":checked")) {
 				deleteValue = "&d=1"
 			}
+			
+			var copyValue = "&c=0"
+			if($("#copySetting").is(":checked")) {
+				copyValue = "&c=1"
+			}
 			var captureCountValue = $.trim($("#captureCount").val())
 			if(captureCountValue != "") {
 				captureCountValue = "&i=" + captureCountValue
 			}
 			
-			window.location.href = "/capture?" + returnValue + fileName + deleteValue + captureCountValue;
+			window.location.href = "/capture?" + returnValue + fileName + deleteValue + captureCountValue + copyValue;
 		}
 		
 		function optionsButtonClick() {
@@ -182,8 +187,12 @@
 			<input type="checkbox" id="immediatSetting" <? if string.find(request_info.query_string, 'r=1') then print('checked=\"checked\"') end ?>/>
 		</div>
 		<div class="setting">
-			<label for="immediatSetting">Delete from camera</label>
+			<label for="deleteSetting">Delete from camera</label>
 			<input type="checkbox" id="deleteSetting" <? if string.find(request_info.query_string, 'd=1') then print('checked=\"checked\"') end ?>/>
+		</div>
+		<div class="setting">
+			<label for="copySetting">Copy from camera</label>
+			<input type="checkbox" id="copySetting" <? if string.find(request_info.query_string, 'c=0') == nil then print('checked=\"checked\"') end ?>/>
 		</div>
 		<div class="setting">
 			<label for="captureName">File Name:</label>

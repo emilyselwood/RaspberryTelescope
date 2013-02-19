@@ -77,51 +77,33 @@ int getWidget(CameraWidget ** widget, CameraWidget ** child, const char * settin
 	return GP_OK;
 }
 
-/*
- * This enables/disables the specific canon capture mode.
- * 
- * For non canons this is not required, and will just return
- * with an error (but without negative effects).
- */
-int canon_enable_capture (Camera *camera, int onoff, GPContext *context) {
-	CameraWidget		*widget = NULL, *child = NULL;
-	CameraWidgetType	type;
-	int 				ret;
+int internal_set_setting(const char * setting, const char * value) {
+	CameraWidget * widget = NULL; // will hold the root config entry
+	CameraWidget * child  = NULL; // will hold the actual config entry from the tree
 
-	ret = getWidget(&widget, &child, "capture");
-	if (ret < GP_OK || child == NULL) {
-		fprintf (stderr, "x lookup widget failed: %d\n", ret);
-		return ret;
-	}
-
-	ret = gp_widget_get_type (child, &type);
+	int ret = getWidget(&widget, &child, setting);
 	if (ret < GP_OK) {
-		fprintf (stderr, "x widget get type failed: %d\n", ret);
-		gp_widget_free (widget);
+		fprintf (stderr, "camera_get_config failed: %d\n", ret);
 		return ret;
 	}
-	if (type != GP_WIDGET_TOGGLE) {
-		fprintf (stderr, "widget has bad type %d\n", type);
-		ret = GP_ERROR_BAD_PARAMETERS;
-		gp_widget_free (widget);
-		return ret;
-	}
-	/* Now set the toggle to the wanted value */
-	ret = gp_widget_set_value (child, &onoff);
+	
+	ret = gp_widget_set_value(child, value);
 	if (ret < GP_OK) {
-		fprintf (stderr, "toggling Canon capture to %d failed with %d\n", onoff, ret);
+		fprintf (stderr, "could not set widget value: %d\n", ret);
 		gp_widget_free (widget);
 		return ret;
 	}
-	/* OK */
+	
+	/* This stores it on the camera again */
 	ret = gp_camera_set_config (camera, widget, context);
 	if (ret < GP_OK) {
 		fprintf (stderr, "camera_set_config failed: %d\n", ret);
+		gp_widget_free (widget);
 		return ret;
 	}
-
+	
 	gp_widget_free (widget);
-	return ret;
+	return 0;
 }
 
 // Create a constext. used in init.
@@ -155,7 +137,7 @@ void initCamaraAndContext() {
 			tc_reset();
 		}
 		else {
-			canon_enable_capture(camera, 1, context);
+			internal_set_setting("capture", "1");
 			initFailed = false;
 		}
 	}
@@ -228,7 +210,7 @@ int tc_get_summary(char * content, const int size_of) {
 	return content_length;
 }
 
-int tc_take_picture(const char * name, const bool delete) {
+int tc_take_picture(const char * name, const bool delete, const bool copy) {
 
 	pthread_mutex_lock(&lock);
 	
@@ -239,35 +221,47 @@ int tc_take_picture(const char * name, const bool delete) {
 		return -1;
 	}
 	else {
+		if(copy && delete) {
+			internal_set_setting("capturetarget", "Internal RAM");
+		}
+		else if(!delete) {
+			internal_set_setting("capturetarget", "Memory card");
+		}
+		
 		CameraFile *canonfile;
 		CameraFilePath camera_file_path;
 
 		/* NOP: This gets overridden in the library to /capt0000.jpg */
 		strcpy(camera_file_path.folder, "/");
 		strcpy(camera_file_path.name, name);
-
+		
 		gp_camera_capture(camera, GP_CAPTURE_IMAGE, &camera_file_path, context);
-
-		int fd = open(name, O_CREAT | O_WRONLY, 0644);
-		gp_file_new_from_fd(&canonfile, fd);
-		gp_camera_file_get(camera, camera_file_path.folder, camera_file_path.name, GP_FILE_TYPE_NORMAL, canonfile, context);
+		
+		int fd;
+		if(copy) {
+			fd = open(name, O_CREAT | O_WRONLY, 0644);
+			gp_file_new_from_fd(&canonfile, fd);
+			gp_camera_file_get(camera, camera_file_path.folder, camera_file_path.name, GP_FILE_TYPE_NORMAL, canonfile, context);
+		}
 
 		if(delete) {
 			gp_camera_file_delete(camera, camera_file_path.folder, camera_file_path.name, context);
 		}
-
-		gp_file_free(canonfile);
+		
+		if(copy) {
+			gp_file_free(canonfile);
+		}
 		pthread_mutex_unlock(&lock);
-		return fd;
+		return 1;
 	}
 }
 
-int tc_take_n_pictures(const int n, const char * name, const char * postfix, const bool delete) {
+int tc_take_n_pictures(const int n, const char * name, const char * postfix, const bool delete, const bool copy) {
 	int res;
 	for(int i = 0; i < n; i++) {
 		char entryName[100];
 		snprintf(entryName, 100, "%s-%d.%s", name, i, postfix);
-		res = tc_take_picture(entryName, delete);
+		res = tc_take_picture(entryName, delete, copy);
 		if(res < 0) {
 			return -1;
 		}
@@ -384,36 +378,7 @@ int tc_set_setting(const char * setting, const char * value) {
 		return -1;
 	}
 	else {
-		CameraWidget * widget = NULL; // will hold the root config entry
-		CameraWidget * child  = NULL; // will hold the actual config entry from the tree
-
-		int ret = getWidget(&widget, &child, setting);
-		if (ret < GP_OK) {
-			fprintf (stderr, "camera_get_config failed: %d\n", ret);
-			pthread_mutex_unlock(&lock);
-			return ret;
-		}
-		
-		ret = gp_widget_set_value(child, value);
-		if (ret < GP_OK) {
-			fprintf (stderr, "could not set widget value: %d\n", ret);
-			gp_widget_free (widget);
-			pthread_mutex_unlock(&lock);
-			return ret;
-		}
-		
-		/* This stores it on the camera again */
-		ret = gp_camera_set_config (camera, widget, context);
-		if (ret < GP_OK) {
-			fprintf (stderr, "camera_set_config failed: %d\n", ret);
-			gp_widget_free (widget);
-			pthread_mutex_unlock(&lock);
-			return ret;
-		}
-		
-		gp_widget_free (widget);
-		pthread_mutex_unlock(&lock);
-		return 0;
+		return internal_set_setting(setting, value);
 	}
 }
 

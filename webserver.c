@@ -92,6 +92,7 @@ void *processCapture(struct mg_connection *conn, const struct mg_request_info *r
 	
 	bool shouldSendBack = bool_query_param(request_info, "r");
 	bool shouldDelete = bool_query_param(request_info, "d");
+	bool shouldCopy = bool_query_param_def(request_info, "c", true);
 
 	const char *path;
 	config_lookup_string(&cfg, "capture.save_path", &path);
@@ -102,10 +103,10 @@ void *processCapture(struct mg_connection *conn, const struct mg_request_info *r
 	int res;
 	if(captureCount > 1) {
 		printf("about to try and capture %d pictures with name %s\n", captureCount, outputPath);
-		res = tc_take_n_pictures(captureCount, outputPath, "jpg", shouldDelete);
+		res = tc_take_n_pictures(captureCount, outputPath, "jpg", shouldDelete, shouldCopy);
 	}
 	else {
-		res = tc_take_picture(outputPath, shouldDelete);
+		res = tc_take_picture(outputPath, shouldDelete, shouldCopy);
 	}
 	
 	if(res > 0) {
@@ -287,6 +288,37 @@ void clean_up() {
 	tc_reset();
 }
 
+bool setup_config() {
+	config_init(&cfg);
+
+	/* Read the file. If there is an error, report it and exit. */
+	if(! config_read_file(&cfg, "config.cfg"))
+	{
+		fprintf(stderr, "Error reading config file:\nLine %d - %s\n",
+				config_error_line(&cfg), config_error_text(&cfg));
+		clean_up();
+		return false;
+	}
+
+	// check that the preview directory exists.
+	const char *path;
+	config_lookup_string(&cfg, "capture.preview_path", &path);
+	if(!dir_exits(path)) {
+		fprintf(stderr, "Error preview path doesn't seem to exist. %s\n", path);
+		clean_up();
+		return false;
+	}
+	
+	const char *savePath;
+	config_lookup_string(&cfg, "capture.save_path", &savePath);
+	if(!dir_exits(savePath)) {
+		fprintf(stderr, "Error save path doesn't seem to exist. %s\n", savePath);
+		clean_up();
+		return false;
+	}
+	return true;
+}
+
 // signal handler so we actually get some idea where the hell this thing crashes.
 // very helpful with gphoto2 being completely non thread safe.
 void bt_sighandler(int sig) {
@@ -308,41 +340,20 @@ void bt_sighandler(int sig) {
 
 		char syscom[256];
 		sprintf(syscom,"addr2line %p -e raspberrytelescope", trace[i]); //last parameter is the name of this app
-		system(syscom);
+		if(system(syscom) != 0) {
+			printf("addr2line returned non zero exit code.\n");
+			//exit(1);
+		}
 	}
 
-	exit(0);
+	exit(1);
 }
 
-int main(void) {
+int main(int argc, char ** argv) {
 
 	signal(SIGSEGV, bt_sighandler);   // install our handler
 
-	config_init(&cfg);
-
-	/* Read the file. If there is an error, report it and exit. */
-	if(! config_read_file(&cfg, "config.cfg"))
-	{
-		fprintf(stderr, "Error reading config file:\nLine %d - %s\n",
-				config_error_line(&cfg), config_error_text(&cfg));
-		clean_up();
-		return -1;
-	}
-
-	// check that the preview directory exists.
-	const char *path;
-	config_lookup_string(&cfg, "capture.preview_path", &path);
-	if(!dir_exits(path)) {
-		fprintf(stderr, "Error preview path doesn't seem to exist. %s\n", path);
-		clean_up();
-		return -2;
-	}
-	
-	const char *savePath;
-	config_lookup_string(&cfg, "capture.save_path", &savePath);
-	if(!dir_exits(savePath)) {
-		fprintf(stderr, "Error save path doesn't seem to exist. %s\n", savePath);
-		clean_up();
+	if(!setup_config()) {
 		return -2;
 	}
 	

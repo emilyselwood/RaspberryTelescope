@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <limits.h>
+#include <errno.h>
 
 size_t n_strlen(const char * string) {
 	if(string == NULL) {
@@ -61,7 +63,10 @@ bool is_int(const char * s) {
 	}
 
 	char * p ;
-	strtol(s, &p, 10) ;
+	long res = strtol(s, &p, 10) ;
+	if((res == LONG_MAX || res == LONG_MIN ) && errno == ERANGE) {
+		return false;
+	}
 
 	return (*p == 0) ;
 }

@@ -2,6 +2,7 @@
 #ifndef __TELESCOPE_CAMARA_H
 #define __TELESCOPE_CAMARA_H
 #include <gphoto2/gphoto2-camera.h>
+
 #include <stdio.h>
 
 /**
@@ -15,10 +16,10 @@ int tc_get_summary(char * content, const int size_of);
  * Saves the picture to the local disk with the fileName provided.
  * deletes the copy of the picture on the camera
  */
-int tc_take_picture(const char * name, const bool delete);
+int tc_take_picture(const char * name, const bool delete, const bool copy);
 
 
-int tc_take_n_pictures(const int n, const char * name, const char * postfix, const bool delete);
+int tc_take_n_pictures(const int n, const char * name, const char * postfix, const bool delete, const bool copy);
 
 /**
  * Captures a preview frame. Saves to the provided fileName/
