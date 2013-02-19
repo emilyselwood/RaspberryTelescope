@@ -221,11 +221,11 @@ int tc_take_picture(const char * name, const bool delete, const bool copy) {
 		return -1;
 	}
 	else {
-		if(copy && delete) {
-			internal_set_setting("capturetarget", "Internal RAM");
-		}
-		else if(!delete) {
+		if(!delete) { // if we are not deleting the file from the camera make sure we are saving to the memory card.
 			internal_set_setting("capturetarget", "Memory card");
+		}
+		else {
+			internal_set_setting("capturetarget", "Internal RAM");
 		}
 		
 		CameraFile *canonfile;
