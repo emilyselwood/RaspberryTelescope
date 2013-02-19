@@ -30,22 +30,19 @@ To get started on a Raspbery PI you will need to run the following commands in s
     sudo apt-get install git libgphoto2-2-dev libconfig-dev libreadline-dev libncurses-dev
     git clone git://github.com/wselwood/RaspberryTelescope.git
     cd RaspberryTelescope
-    wget http://www.lua.org/ftp/lua-5.2.1.tar.gz -O lua-5.2.1.tar.gz
-    tar xvzf lua-5.2.1.tar.gz
-    cd lua-5.2.1
-    make linux
-    cd ..
-    make
+    make setup raspberrytelescope
     ./raspberytelescope
     
 Connect your camera and turn it on. In a web browser connect to http://raspberrypi:8080/ and you should see the live preview from your camera. 
 
-On a pi the live preview can be pretty slow and not exactly live. I think a faster memory card will probably help, or a configuration system that allows for the preview images to be writen to a ram disk.
+On a pi the live preview can be pretty slow and not exactly live. 
 
 Make Targets:
-* all : Builds every thing
+* all : runs just the raspberrytelescope target. May be removed later. Prefer the raspberrytelescope target
 * raspberrytelescope : Builds every thing at the moment.
 * clean : clean
+* setup : Download and build lua
+* dist-clean : depends on clean. Clears out the lua folder and downloaded file.
 
 At the moment there two warnings one in the mongoose.c file and one in telescopecamera.c about a pointer being cast 
 to an integer if you are building on a 64bit machine. This doesn't happen on a Pi. 
@@ -60,9 +57,7 @@ We need lua, libgphoto2 and libconfig
 
 libgphoto2 and libconfig can be got from you favourte package manager.
 
-lua can be got from www.lua.org/ftp/ Ive used version 5.2.1 Download and compile. You may need to install libncurses and libreadline
-
-At the top of the make file there is a path to where you downloaded and built lua. Defaults to "lua-5.2.1/"
+Lua can be obtained using the setup make target which downloads it from from www.lua.org/ftp/ at the moment version 5.2.1 is downloaded
 
 This also uses Mongoose and JQuery-UI but the needed files are included here. 
 
@@ -106,6 +101,7 @@ The /capture service takes several query parameters:
 * n=[filename] this alows you to pass the name to save the picture with.
 * r=[0|1] return the file to the user or not. If 1 returns the file to the user. If not it doesn't. Either way it will save it in the webRoot/img/ directory
 * d=[0|1] Should the file be removed from the camera once it has been downloaded and saved by the server.
+* c=[0|1] Should the picture be copied from the camera to the server. (Note with this off and the delete option on you will lose the picture)
 * i=[0-9999] capture a number of images, will always capture at least one image even if you send zero. Note the return option only works if this is 0, 1 or not set.
 
 The /setsetting service takes two query parameters:
