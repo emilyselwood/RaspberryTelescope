@@ -378,7 +378,9 @@ int tc_set_setting(const char * setting, const char * value) {
 		return -1;
 	}
 	else {
-		return internal_set_setting(setting, value);
+		int res = internal_set_setting(setting, value);
+		pthread_mutex_unlock(&lock);
+		return res;
 	}
 }
 
