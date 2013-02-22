@@ -210,6 +210,31 @@ int tc_get_summary(char * content, const int size_of) {
 	return content_length;
 }
 
+void internal_take_picture(const char * name, const bool delete, const bool copy) {
+	CameraFile *canonfile;
+	CameraFilePath camera_file_path;
+
+	/* NOP: This gets overridden in the library to /capt0000.jpg */
+	strcpy(camera_file_path.folder, "/");
+	strcpy(camera_file_path.name, name);
+	
+	gp_camera_capture(camera, GP_CAPTURE_IMAGE, &camera_file_path, context);
+	
+	if(copy) {
+		int fd = open(name, O_CREAT | O_WRONLY, 0644);
+		gp_file_new_from_fd(&canonfile, fd);
+		gp_camera_file_get(camera, camera_file_path.folder, camera_file_path.name, GP_FILE_TYPE_NORMAL, canonfile, context);
+	}
+
+	if(delete) {
+		gp_camera_file_delete(camera, camera_file_path.folder, camera_file_path.name, context);
+	}
+	
+	if(copy) {
+		gp_file_free(canonfile);
+	}
+}
+
 int tc_take_picture(const char * name, const bool delete, const bool copy) {
 
 	pthread_mutex_lock(&lock);
@@ -228,45 +253,38 @@ int tc_take_picture(const char * name, const bool delete, const bool copy) {
 			internal_set_setting("capturetarget", "Internal RAM");
 		}
 		
-		CameraFile *canonfile;
-		CameraFilePath camera_file_path;
-
-		/* NOP: This gets overridden in the library to /capt0000.jpg */
-		strcpy(camera_file_path.folder, "/");
-		strcpy(camera_file_path.name, name);
-		
-		gp_camera_capture(camera, GP_CAPTURE_IMAGE, &camera_file_path, context);
-		
-		int fd;
-		if(copy) {
-			fd = open(name, O_CREAT | O_WRONLY, 0644);
-			gp_file_new_from_fd(&canonfile, fd);
-			gp_camera_file_get(camera, camera_file_path.folder, camera_file_path.name, GP_FILE_TYPE_NORMAL, canonfile, context);
-		}
-
-		if(delete) {
-			gp_camera_file_delete(camera, camera_file_path.folder, camera_file_path.name, context);
-		}
-		
-		if(copy) {
-			gp_file_free(canonfile);
-		}
+		internal_take_picture(name, delete, copy);
 		pthread_mutex_unlock(&lock);
 		return 1;
 	}
 }
 
 int tc_take_n_pictures(const int n, const char * name, const char * postfix, const bool delete, const bool copy) {
-	int res;
-	for(int i = 0; i < n; i++) {
-		char entryName[100];
-		snprintf(entryName, 100, "%s-%d.%s", name, i, postfix);
-		res = tc_take_picture(entryName, delete, copy);
-		if(res < 0) {
-			return -1;
-		}
+	pthread_mutex_lock(&lock);
+	
+	initCamaraAndContext();
+
+	if( initFailed ) {
+		pthread_mutex_unlock(&lock);
+		return -1;
 	}
-	return 1;
+	else {
+		if(!delete) { // if we are not deleting the file from the camera make sure we are saving to the memory card.
+			internal_set_setting("capturetarget", "Memory card");
+		}
+		else {
+			internal_set_setting("capturetarget", "Internal RAM");
+		}
+		
+		for(int i = 0; i < n; i++) {
+			char entryName[100];
+			snprintf(entryName, 100, "%s-%d.%s", name, i, postfix);
+			internal_take_picture(name, delete, copy);
+		}
+		
+		pthread_mutex_unlock(&lock);
+		return 1;
+	}
 }
 
 int tc_preview(const char * name) {
@@ -411,7 +429,12 @@ int tc_settings(FILE * output) {
 			
 			fprintf(output, "\"%s\" : {\n", name);
 			indent(output, depth+1);
-			fprintf(output, "\"value\" : \"%s\"", value);
+			fprintf(output, "\"value\" : \"%s\",\n", value);
+			
+			const char * label;
+			gp_widget_get_label(widget, &label);
+			indent(output, depth+1);
+			fprintf(output, "\"label\" : \"%s\"", label);
 			
 			// If this setting has a fixed list of options we will return those as well.
 			// For instance iso can be one of "Auto","100","200","400","800","1600","3200","6400" on a Cannon 550D
