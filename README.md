@@ -35,7 +35,7 @@ To get started on a Raspbery PI you will need to run the following commands in s
     
 Connect your camera and turn it on. In a web browser connect to http://raspberrypi:8080/ and you should see the live preview from your camera. 
 
-On a pi the live preview can be pretty slow and not exactly live. 
+On a pi the live preview can be pretty slow and not exactly live. Also on an iPad the browser will not let you set a java script time out for less than a second which causes very low frame rates.
 
 Make Targets:
 * all : runs just the raspberrytelescope target. May be removed later. Prefer the raspberrytelescope target
@@ -108,8 +108,8 @@ The /setsetting service takes two query parameters:
 * k=[setting name] this is the name of the setting you want to update.
 * v=[new value] this is the new value for the setting you want to update.
 
-The /image service takes a single query parameter:
-* n=[image name] 
+The /image service is restful so that browsers can cache the images returned. Quite simple the next bit of the path after the /image/ is the file name.
+
 
 
 
