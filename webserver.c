@@ -37,8 +37,8 @@
 #define LIST_IMAGES_URL "/listimages"
 #define LIST_IMAGES_URL_LENGTH 11
 
-#define IMAGE_URL "/image"
-#define IMAGE_URL_LENGTH 6
+#define IMAGE_URL "/image/"
+#define IMAGE_URL_LENGTH 7
 
 // global configuration as this will be accessed in the call backs.
 config_t cfg;
@@ -202,14 +202,18 @@ void * processListImages(struct mg_connection *conn, const struct mg_request_inf
 
 
 void * processImage(struct mg_connection *conn, const struct mg_request_info *request_info) {
-	char name[100];
-
-	int nameLength = str_query_param(request_info, "n", name, 100);
 	
-	if(nameLength <= 0) {
-		return returnError(conn, 400, "Missing image name");
+	if(n_strlen(request_info->uri) <= IMAGE_URL_LENGTH) {
+		return returnError(conn, 400, "Missing parameter");
 	}
 	
+	const char * name = (&request_info->uri[IMAGE_URL_LENGTH]);
+	const int nameLength = n_strlen(name);
+	
+	if(name == '\0' || nameLength == 0) {
+		return returnError(conn, 400, "Missing image name");
+	}
+
 	if(contains_path_chars(name)) {
 		return returnError(conn, 400, "Invalid image name");
 	}
