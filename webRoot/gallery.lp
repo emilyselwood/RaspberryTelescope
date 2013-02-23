@@ -30,7 +30,7 @@
 		
 			var sortedList = data.files.sort(function(a,b) { return b.date - a.date; });
 			$.each(sortedList, function(index, image) {
-				$("#imageTable tbody").append("<tr><td><a href=\"/image?n=" + image.name + "\"><img src=\"/image?n=" + image.name + "\" height=\"100px\" width=\"100px\"/></a></td><td>" + image.name +
+				$("#imageTable tbody").append("<tr><td><a href=\"/image/" + image.name + "\"><img src=\"/image/" + image.name + "\" height=\"100px\" width=\"100px\"/></a></td><td>" + image.name +
 					"</td><td>" + formatDate(image.date) + 
 					"</td><td>"+formatSize(image.size) + 
 					"</td></tr>")

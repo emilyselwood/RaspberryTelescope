@@ -237,7 +237,6 @@ void * processImage(struct mg_connection *conn, const struct mg_request_info *re
 
 static void *callback(enum mg_event event, struct mg_connection *conn) {
 
-
 	if (event == MG_NEW_REQUEST) {
 		const struct mg_request_info *request_info = mg_get_request_info(conn);
 		// before loading up the index page check for existence of a camera.
