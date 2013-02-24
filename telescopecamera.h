@@ -4,6 +4,7 @@
 #include <gphoto2/gphoto2-camera.h>
 
 #include <stdio.h>
+#include <stdbool.h>
 
 /**
  * return summary information from the camera

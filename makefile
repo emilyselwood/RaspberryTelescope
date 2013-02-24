@@ -7,10 +7,8 @@ CFLAGS=-O2 -Wall -g -rdynamic -std=c99
 LDFLAGS=-ldl -pthread -lgphoto2 -lconfig -I$(LUA) -L$(LUA) -llua -lm
 MONGOOSE_BUILD_OPTS=-DUSE_LUA
 
-all: raspberrytelescope
-
 raspberrytelescope:
-	$(CC) stringutils.c fileutils.c telescopecamera.c mongoose.c webserver.c $(CFLAGS) $(LDFLAGS) $(MONGOOSE_BUILD_OPTS) -o $(PROG)
+	$(CC) stringutils.c fileutils.c telescopecamera.c timelapse.c mongoose.c webserver.c $(CFLAGS) $(LDFLAGS) $(MONGOOSE_BUILD_OPTS) -o $(PROG)
 
 .PHONY : clean
 clean:

@@ -18,6 +18,7 @@
 #include "telescopecamera.h"
 #include "stringutils.h"
 #include "fileutils.h"
+#include "timelapse.h"
 
 #define SUMMARY_URL "/summary"
 #define SUMMARY_URL_LENGTH 8
@@ -40,6 +41,15 @@
 #define IMAGE_URL "/image/"
 #define IMAGE_URL_LENGTH 7
 
+#define TIME_LAPSE_URL "/timelapse"
+#define TIME_LAPSE_URL_LENGTH 10
+
+#define TIME_LAPSE_STATUS_URL "/tlstatus"
+#define TIME_LAPSE_STATUS_URL_LENGTH 9
+
+#define TIME_LAPSE_CANCEL_URL "/tlcancel"
+#define TIME_LAPSE_CANCEL_URL_LENGTH 9
+
 // global configuration as this will be accessed in the call backs.
 config_t cfg;
 
@@ -58,6 +68,17 @@ void *returnResult(struct mg_connection *conn, const int status, const char * st
 
 void * returnError(struct mg_connection *conn, const int status, const char * statusMessage) {
 	return returnResult(conn, status, statusMessage, statusMessage, n_strlen(statusMessage));
+}
+
+void * returnRedirect(struct mg_connection *conn, const char * url, const char * parms) {
+	mg_printf(conn,
+		"HTTP/1.1 307 Temporary Redirect\r\n"
+		"Location: %s%s\r\n"
+		"content_length: 0\r\n"
+		"Content-Type: text/html\r\n\r\n",
+		url, parms
+	);
+	return "";
 }
 
 void *processSummary(struct mg_connection *conn, const struct mg_request_info *request_info) {
@@ -114,13 +135,7 @@ void *processCapture(struct mg_connection *conn, const struct mg_request_info *r
 			mg_send_file(conn, outputPath);
 		}
 		else {
-			mg_printf(conn,
-				"HTTP/1.1 307 Temporary Redirect\r\n"
-				"Location: /?%s\r\n"
-				"content_length: 0\r\n"
-				"Content-Type: text/html\r\n\r\n",
-				request_info->query_string 
-			);
+			returnRedirect(conn, "/?", request_info->query_string );
 		}
 	}
 	else {
@@ -207,7 +222,7 @@ void * processImage(struct mg_connection *conn, const struct mg_request_info *re
 		return returnError(conn, 400, "Missing parameter");
 	}
 	
-	const char * name = (&request_info->uri[IMAGE_URL_LENGTH]);
+	const char * name = &(request_info->uri[IMAGE_URL_LENGTH]);
 	const int nameLength = n_strlen(name);
 	
 	if(name == '\0' || nameLength == 0) {
@@ -223,7 +238,7 @@ void * processImage(struct mg_connection *conn, const struct mg_request_info *re
 	
 	int fullLength = n_strlen(path) + nameLength + 1;
 	
-	char * fullpath = (char*)malloc(sizeof(char) * fullLength + 1);
+	char * fullpath = (char*)malloc(sizeof(char) * (fullLength + 1));
 	
 	snprintf(fullpath, fullLength, "%s%s", path, name); 
 	
@@ -233,6 +248,51 @@ void * processImage(struct mg_connection *conn, const struct mg_request_info *re
 	free(fullpath);
 	return "";
 	
+}
+
+void * processTimelapse(struct mg_connection *conn, const struct mg_request_info *request_info) {
+	
+	int interval = int_query_param(request_info, "t");
+	int counter  = int_query_param(request_info, "i");
+	
+	char prefix[50];
+	int prefixLength = str_query_param(request_info, "n", prefix, 50);
+	
+	if(interval == 0 || counter == 0 || prefixLength == 0) {
+		return returnError(conn, 400, "Missing parameters");
+	}
+	
+	const char *path;
+	config_lookup_string(&cfg, "capture.save_path", &path);
+	
+	int fullLen = prefixLength + n_strlen(path) + 1;
+	// note this will get freed by the time lapse thread so that this string is avaible through out the time lapse
+	char * fullPath = (char*) malloc(sizeof(char) * fullLen);
+	
+	snprintf(fullPath, fullLen, "%s%s", path, prefix);
+	
+	tl_start(interval, counter, fullPath, "jpg");
+	return returnError(conn, 200, "Started a timelapse");
+	
+}
+
+void * processTLStatus(struct mg_connection *conn, const struct mg_request_info *request_info) {
+	char * buffer;
+    size_t size;
+	FILE * stream = open_memstream(&buffer, &size);
+	
+	tl_get_status(stream);
+	
+	fclose(stream);
+	returnResult(conn, 200, "OK", buffer, size);
+	free(buffer);
+	return "";
+}
+
+void * processTLCancel(struct mg_connection *conn, const struct mg_request_info *request_info) {
+	printf("Cancelling timelapse\n");
+	tl_cancel();
+	return returnError(conn, 200, "Cancelled");
 }
 
 static void *callback(enum mg_event event, struct mg_connection *conn) {
@@ -245,13 +305,7 @@ static void *callback(enum mg_event event, struct mg_connection *conn) {
 				return NULL; // return null so it goes to the normal index page.
 			}
 			else {
-				mg_printf(conn,
-					"HTTP/1.1 307 Temporary Redirect\r\n"
-					"Location: /nocamera.lp\r\n"
-					"content_length: 0\r\n"
-					"Content-Type: text/html\r\n\r\n" 
-				);
-				return "";
+				return returnRedirect(conn, "/nocamera.lp", "");
 			}
 		}
 		// check for internal urls and then if we don't find one of our magic ones fall back.
@@ -276,6 +330,15 @@ static void *callback(enum mg_event event, struct mg_connection *conn) {
 		else if(strncmp(request_info->uri, IMAGE_URL, IMAGE_URL_LENGTH) == 0) {
 			return processImage(conn, request_info);
 		}
+		else if(strncmp(request_info->uri, TIME_LAPSE_URL, TIME_LAPSE_URL_LENGTH) == 0) {
+			return processTimelapse(conn, request_info);
+		}
+		else if(strncmp(request_info->uri, TIME_LAPSE_STATUS_URL, TIME_LAPSE_STATUS_URL_LENGTH) == 0) {
+			return processTLStatus(conn, request_info);
+		}
+		else if(strncmp(request_info->uri, TIME_LAPSE_CANCEL_URL, TIME_LAPSE_CANCEL_URL_LENGTH) == 0) {
+			return processTLCancel(conn, request_info);
+		}
 		else {
 			// if we return null it falls out the end of this handler and tries the document_root to see if a file exists there.
 			return NULL;
@@ -287,10 +350,17 @@ static void *callback(enum mg_event event, struct mg_connection *conn) {
 }
 
 void clean_up() {
+	
+	// Make sure we stop any running time lapse.
+	tl_cancel();
+	tl_wait();
+	
 	config_destroy(&cfg);
 	tc_reset();
 }
 
+// as well as setting up the config system we make sure that the  
+// folders we are going to need exist.
 bool setup_config() {
 	config_init(&cfg);
 
@@ -322,6 +392,11 @@ bool setup_config() {
 	return true;
 }
 
+// no op signal handler to catch alarm signals caused by cancelling a time lapse.
+void nop_sighandler(int sig) {
+	// nop.
+}
+
 // signal handler so we actually get some idea where the hell this thing crashes.
 // very helpful with gphoto2 being completely non thread safe.
 void bt_sighandler(int sig) {
@@ -345,7 +420,6 @@ void bt_sighandler(int sig) {
 		sprintf(syscom,"addr2line %p -e raspberrytelescope", trace[i]); //last parameter is the name of this app
 		if(system(syscom) != 0) {
 			printf("addr2line returned non zero exit code.\n");
-			//exit(1);
 		}
 	}
 
@@ -354,8 +428,9 @@ void bt_sighandler(int sig) {
 
 int main(int argc, char ** argv) {
 
-	signal(SIGSEGV, bt_sighandler);   // install our handler
-
+	signal(SIGSEGV, bt_sighandler);   // install our back trace handler
+	signal(SIGALRM, nop_sighandler);
+	
 	if(!setup_config()) {
 		return -2;
 	}
@@ -374,7 +449,13 @@ int main(int argc, char ** argv) {
 
 	// this actually starts the web server.
 	ctx = mg_start(&callback, NULL, options);
+	
 	getchar(); // Wait until user hits "enter"
+	if(tl_in_progress()) {
+		printf("WARNING: There is a time lapse in progress. Press Enter agian to exit\n");
+		getchar();
+	}
+	
 	mg_stop(ctx);
 
 	clean_up();

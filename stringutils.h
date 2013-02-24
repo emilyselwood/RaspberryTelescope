@@ -24,4 +24,7 @@ bool contains_path_chars(const char * s);
 
 void indent(FILE * outputStream, int depth);
 
+// returns the number of digits of in.
+int digits(const long in);
+
 #endif

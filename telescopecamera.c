@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include <stdbool.h>
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -32,7 +31,6 @@ static void ctx_status_func (GPContext *context, const char *str, void *data)
 	fprintf(stderr, "status: %s\n", str);
 	fflush(stderr);
 }
-
 
 
 	/*

@@ -89,3 +89,38 @@ void indent(FILE * outputStream, const int depth) {
 		fprintf(outputStream, "\t");
 	}
 }
+
+// most of the time we expect small numbers so short cut the first few and fall back to a slower method if needed
+int digits(const long in) {
+	if(in < 0) {
+		return digits(-in) + 1; // minus counts as a digit.
+	}
+	if(in <= 100000) {
+		if(in < 10) {
+			return 1;
+		}
+		if(in < 100) {
+			return 2;
+		}
+		if(in < 1000) {
+			return 3;
+		}
+		if(in < 10000) {
+			return 4;
+		}
+		if(in < 100000) {
+			return 5;
+		}
+		return 6; // exactly 100000
+	}
+	else  {
+		long number = in / 100000;
+		int digits = 6;
+		while(number) {
+			number = number / 10;
+			digits++;
+		}
+		return digits;
+	}
+	
+}
