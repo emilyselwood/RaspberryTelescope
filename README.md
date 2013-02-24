@@ -38,7 +38,6 @@ Connect your camera and turn it on. In a web browser connect to http://raspberry
 On a pi the live preview can be pretty slow and not exactly live. Also on an iPad the browser will not let you set a java script time out for less than a second which causes very low frame rates.
 
 Make Targets:
-* all : runs just the raspberrytelescope target. May be removed later. Prefer the raspberrytelescope target
 * raspberrytelescope : Builds every thing at the moment.
 * clean : clean
 * setup : Download and build lua
@@ -48,7 +47,7 @@ At the moment there two warnings one in the mongoose.c file and one in telescope
 to an integer if you are building on a 64bit machine. This doesn't happen on a Pi. 
 These are both due to using void * to store int data.
 
-To run the web server simply execude the raspberrytelescope command. To exit press enter in the shell thats running the webserver.
+To run the web server simply execude the raspberrytelescope command. To exit press enter in the shell thats running the webserver. If a time lapse is running it will ask you to confirm by pressing enter again.
 
 Depencies
 ---------
@@ -82,6 +81,7 @@ Project Structure
 
 * webserver.c contains the main function along with all the code for dealing with the Mongoose webserver.
 * telescopecamera.c / .h contains all the code for interfacing with the camera.
+* timelapse.c / .h contains all the code for dealing with timelapses.
 * stringutils.c / .h some string helper functions.
 * fileutils.c /.h code for dealing with the file system.
 * mongoose.c / .h all the code for the mongoose web server.
@@ -96,6 +96,9 @@ Services
 * /setsetting - takes a key and value and updates a setting on the camera.
 * /listimages - returns a json file listing of all the images in the save folder. Does not return hidden files. Result is inode ordered. Sort client side.
 * /image - takes the name of an image and returns it to the requester. Abstracts away the path images are saved to.
+* /timelapse - starts a time lapse sequence.
+* /tlstatus - returns the status of a time lapse. Number of frames remaining etc.
+* /tlcancel - stops a running timelapse.
 
 The /capture service takes several query parameters:
 * n=[filename] this alows you to pass the name to save the picture with.
@@ -110,6 +113,9 @@ The /setsetting service takes two query parameters:
 
 The /image service is restful so that browsers can cache the images returned. Quite simple the next bit of the path after the /image/ is the file name.
 
-
+The /timelapse service takes several query parameters:
+* n=[prefix] this will be the start of all the file names created from this time lapse.
+* i=[0-99999] number of images to take.
+* t=[0-99999] number of seconds between frames.
 
 
