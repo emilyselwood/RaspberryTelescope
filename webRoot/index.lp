@@ -43,7 +43,7 @@
 
 		}
 		
-		function captureButtonClick() {
+		function captureSingleClick() {
 			var returnValue = ""
 			if($("#immediatSetting").is(':checked')) {
 				returnValue = "r=1"
@@ -70,6 +70,48 @@
 			}
 			
 			window.location.href = "/capture?" + returnValue + fileName + deleteValue + captureCountValue + copyValue;
+		}
+		
+		function captureTimeLapseClick() {
+			var fileName = $.trim($("#captureName").val())
+			if(fileName != "") {
+				fileName = "&n=" + fileName
+			}
+			
+			var nFrames = $.trim($("#captureName").val())
+			if(nFrames != "") {
+				nFrames = "&i=" + nFrames
+			}
+			
+			var delay = $.trim($("#captureName").val())
+			if(delay != "") {
+				delay = "&t=" + delay
+			}
+			window.location.href = "/timelapse?" + filename + nFrames + delay;
+		}
+		
+		function captureButtonClick() {
+			captureSingleClick();
+			
+			if($("singleShotOptionsButton").is(":checked")) {
+				captureSingleClick();
+			}
+			else if($("timelapseOptionsButton").is(":checked")) {
+				captureTimeLapseClick();
+			}
+		}
+		
+		function shootingOptionsSetClick() {
+			// hide every thing then show the one we want about.
+			$("#singleShotOptions").hide();
+			$("#timelapseOptions").hide();
+			
+			if($("#singleShotOptionsButton").is(":checked")) {
+				$("#singleShotOptions").show();
+			}
+			else {
+				$("#timelapseOptions").show();
+			}
 		}
 		
 		function optionsButtonClick() {
@@ -137,6 +179,18 @@
 		}
 		
 		$(function() {
+		
+			$("#singleShotOptionsButton")
+				.button()
+				.click(shootingOptionsSetClick);
+			$("#timelapseOptionsButton")
+				.button()
+				.click(shootingOptionsSetClick);
+			$("#optionsButtonSet").buttonset();
+			
+			$("#singleShotOptions").show();
+			$("#timelapseOptions").hide();
+		
 			$( "#captureButton" )
 				.button()
 				.click(captureButtonClick);
@@ -150,10 +204,9 @@
 				.button()
 				.click(optionsButtonClick);
 				
-			$("#optionsButtonSet").buttonset();
+			$("#shootingOptionsSet").buttonset();
 			
 			$("#galleryLink").button();
-			
 			$("#previewDiv").show();
 			$("#captureOptions").hide();
 			$("#cameraOptions").hide();
@@ -183,26 +236,50 @@
 	</div>
 	<div id="captureOptions" class="optionsTab">
 		<div class="setting">
-			<label for="immediatSetting">Show image immediately</label>
-			<input type="checkbox" id="immediatSetting" <? if string.find(request_info.query_string, 'r=1') then print('checked=\"checked\"') end ?>/>
+			<span id="shootingOptionsSet">
+				<input type="radio" name="shootingOptionsSet" id="singleShotOptionsButton" /><label for="singleShotOptionsButton">Single</label>
+				<input type="radio" name="shootingOptionsSet" id="timelapseOptionsButton" /><label for="timelapseOptionsButton">Timelapse</label>
+			</span>
 		</div>
-		<div class="setting">
-			<label for="deleteSetting">Delete from camera</label>
-			<input type="checkbox" id="deleteSetting" <? if string.find(request_info.query_string, 'd=1') then print('checked=\"checked\"') end ?>/>
+		<div id="singleShotOptions" class="optionsSubTab">
+			<div class="setting">
+				<label for="immediatSetting">Show image immediately</label>
+				<input type="checkbox" id="immediatSetting" <? if string.find(request_info.query_string, 'r=1') then print('checked=\"checked\"') end ?>/>
+			</div>
+			<div class="setting">
+				<label for="deleteSetting">Delete from camera</label>
+				<input type="checkbox" id="deleteSetting" <? if string.find(request_info.query_string, 'd=1') then print('checked=\"checked\"') end ?>/>
+			</div>
+			<div class="setting">
+				<label for="copySetting">Copy from camera</label>
+				<input type="checkbox" id="copySetting" <? if string.find(request_info.query_string, 'c=0') == nil then print('checked=\"checked\"') end ?>/>
+			</div>
+			<div class="setting">
+				<label for="captureName">File Name:</label>
+				<input type="text" <? print('value=\"' .. findParam(request_info.query_string, 'n=', '') .. '\"') ?> id="captureName" />
+				Warning if the file already exists it will be overwritten. Leave blank for a date stamped file name.
+			</div>
+			<div class="setting">
+				<label for="captureCount">Number of frames:</label>
+				<input type="text" <? print('value=\"' .. findParam(request_info.query_string, 'i=', '1') .. '\"') ?> id="captureCount" />
+				Instruct the camera to take this many pictures as fast as possible. A number will be appended to the file name along with the image file extention.
+			</div>
 		</div>
-		<div class="setting">
-			<label for="copySetting">Copy from camera</label>
-			<input type="checkbox" id="copySetting" <? if string.find(request_info.query_string, 'c=0') == nil then print('checked=\"checked\"') end ?>/>
-		</div>
-		<div class="setting">
-			<label for="captureName">File Name:</label>
-			<input type="text" <? print('value=\"' .. findParam(request_info.query_string, 'n=', '') .. '\"') ?> id="captureName" />
-			Warning if the file already exists it will be overwritten. Leave blank for a date stamped file name.
-		</div>
-		<div class="setting">
-			<label for="captureCount">Number of frames:</label>
-			<input type="text" <? print('value=\"' .. findParam(request_info.query_string, 'i=', '1') .. '\"') ?> id="captureCount" />
-			Instruct the camera to take this many pictures as fast as possible. A number will be appended to the file name along with the image file extention.
+		<div id="timelapseOptions" class="optionsSubTab">
+			<div class="setting">
+				<label for="tlCaptureName">File prefix:</label>
+				<input type="text" <? print('value=\"' .. findParam(request_info.query_string, 'n=', '') .. '\"') ?> id="tlCaptureName" />
+				Prefix for timelapse pictures.
+			</div>
+			<div class="setting">
+				<label for="tlCaptureCount">Number of frames:</label>
+				<input type="text" <? print('value=\"' .. findParam(request_info.query_string, 'i=', '1') .. '\"') ?> id="tlCaptureCount" />
+			</div>
+			<div class="setting">
+				<label for="tlInterval">Time between frames:</label>
+				<input type="text" <? print('value=\"' .. findParam(request_info.query_string, 't=', '1') .. '\"') ?> id="tlInterval" />
+				Time in seconds
+			</div>
 		</div>
 	</div>
 	<div id="cameraOptions" class="optionsTab">
