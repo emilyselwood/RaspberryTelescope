@@ -73,30 +73,28 @@
 		}
 		
 		function captureTimeLapseClick() {
-			var fileName = $.trim($("#captureName").val())
+			var fileName = $.trim($("#tlCaptureName").val())
 			if(fileName != "") {
 				fileName = "&n=" + fileName
 			}
 			
-			var nFrames = $.trim($("#captureName").val())
+			var nFrames = $.trim($("#tlCaptureCount").val())
 			if(nFrames != "") {
 				nFrames = "&i=" + nFrames
 			}
 			
-			var delay = $.trim($("#captureName").val())
+			var delay = $.trim($("#tlInterval").val())
 			if(delay != "") {
 				delay = "&t=" + delay
 			}
-			window.location.href = "/timelapse?" + filename + nFrames + delay;
+			window.location.href = "/timelapse?" + fileName + nFrames + delay;
 		}
 		
 		function captureButtonClick() {
-			captureSingleClick();
-			
-			if($("singleShotOptionsButton").is(":checked")) {
+			if($("#singleShotOptionsButton").is(":checked")) {
 				captureSingleClick();
 			}
-			else if($("timelapseOptionsButton").is(":checked")) {
+			else if($("#timelapseOptionsButton").is(":checked")) {
 				captureTimeLapseClick();
 			}
 		}
