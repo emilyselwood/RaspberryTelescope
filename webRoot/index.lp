@@ -28,8 +28,18 @@
 	<script>
 		tickTime = new Date();
 	
-		function updateImage()
-		{
+		function handleTLStatus(data) {
+			if(data.status == "processing") {
+				$("#timelapseStatus").text("Time lapse in progress: " + data.current + " / " + data.number);
+				$("#timelapseCancleButton").show();
+			}
+			else {
+				$("#timelapseStatus").text("");
+				$("#timelapseCancleButton").hide();
+			}
+		}
+	
+		function updateImage() {
 			var image = document.getElementById("previewImage");
 			if(image.complete) {
 				image.src="/preview#" + new Date().getTime();
@@ -39,6 +49,7 @@
 				$("#tick").text ("" + (endTime.getTime() - tickTime.getTime()) + "ms");
 				tickTime = endTime;
 			}
+			$.getJSON("/tlstatus", handleTLStatus);
 			setTimeout(updateImage, 500);
 
 		}
@@ -100,7 +111,7 @@
 		}
 		
 		function shootingOptionsSetClick() {
-			// hide every thing then show the one we want about.
+			// hide every thing then show the one we want.
 			$("#singleShotOptions").hide();
 			$("#timelapseOptions").hide();
 			
@@ -113,7 +124,7 @@
 		}
 		
 		function optionsButtonClick() {
-			// hide every thing then show the one we want about.
+			// hide every thing then show the one we want.
 			$("#previewDiv").hide();
 			$("#captureOptions").hide();
 			$("#cameraOptions").hide();
@@ -209,6 +220,9 @@
 			$("#captureOptions").hide();
 			$("#cameraOptions").hide();
 			
+			$("#timelapseCancleButton").button();
+			$("#timelapseCancleButton").hide();
+			
 			setTimeout(updateImage, 1000);
 			
 			$.getJSON("/settings", handleJSONSettings);
@@ -226,6 +240,8 @@
 			<input type="radio" name="optionsButtonSet" id="cameraOptionsButton" /><label for="cameraOptionsButton">Camera</label>
 		</span>
 		<a id="galleryLink" href="gallery.lp">Gallery</a>
+		<span id="timelapseStatus"></span>
+		<a id="timelapseCancleButton" href="/tlcancel">Cancel</a>
 		<span id="tick">-50</span>
 		
 	</div>

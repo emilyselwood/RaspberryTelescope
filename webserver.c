@@ -272,8 +272,7 @@ void * processTimelapse(struct mg_connection *conn, const struct mg_request_info
 	snprintf(fullPath, fullLen, "%s%s", path, prefix);
 	
 	tl_start(interval, counter, fullPath, "jpg");
-	return returnError(conn, 200, "Started a timelapse");
-	
+	return returnRedirect(conn, "/?", request_info->query_string );
 }
 
 void * processTLStatus(struct mg_connection *conn, const struct mg_request_info *request_info) {
@@ -292,7 +291,7 @@ void * processTLStatus(struct mg_connection *conn, const struct mg_request_info 
 void * processTLCancel(struct mg_connection *conn, const struct mg_request_info *request_info) {
 	printf("Cancelling timelapse\n");
 	tl_cancel();
-	return returnError(conn, 200, "Cancelled");
+	return returnRedirect(conn, "/", "");
 }
 
 static void *callback(enum mg_event event, struct mg_connection *conn) {

@@ -143,7 +143,6 @@ void * internal_capture(void * arg) {
 	free(working_prefix);
 		
 	working = false;
-	
 	pthread_mutex_unlock(&timelapse_lock);
 	return NULL;	// end of thread;
 }
@@ -165,6 +164,7 @@ int tl_start(const int interval, const int count, char * prefix, const char * ex
 	working_extension = extension;
 	
 	working = true;
+	should_cancel = false;
 	
 	pthread_mutex_unlock(&timelapse_lock);
 	pthread_create(&worker, NULL, &internal_capture, NULL);
