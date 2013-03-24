@@ -31,11 +31,11 @@
 		function handleTLStatus(data) {
 			if(data.status == "processing") {
 				$("#timelapseStatus").text("Time lapse in progress: " + data.current + " / " + data.number);
-				$("#timelapseCancleButton").show();
+				$("#timelapseCancelButton").show();
 			}
 			else {
 				$("#timelapseStatus").text("");
-				$("#timelapseCancleButton").hide();
+				$("#timelapseCancelButton").hide();
 			}
 		}
 	
@@ -220,8 +220,8 @@
 			$("#captureOptions").hide();
 			$("#cameraOptions").hide();
 			
-			$("#timelapseCancleButton").button();
-			$("#timelapseCancleButton").hide();
+			$("#timelapseCancelButton").button();
+			$("#timelapseCancelButton").hide();
 			
 			setTimeout(updateImage, 1000);
 			
@@ -241,7 +241,7 @@
 		</span>
 		<a id="galleryLink" href="gallery.lp">Gallery</a>
 		<span id="timelapseStatus"></span>
-		<a id="timelapseCancleButton" href="/tlcancel">Cancel</a>
+		<a id="timelapseCancelButton" href="/tlcancel">Cancel</a>
 		<span id="tick">-50</span>
 		
 	</div>
