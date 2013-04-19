@@ -30,7 +30,7 @@
 	
 		function handleTLStatus(data) {
 			if(data.status == "processing") {
-				$("#timelapseStatus").text("Time lapse in progress: " + data.current + " / " + data.number);
+				$("#timelapseStatus").text("Progress: " + data.current + " / " + data.number);
 				$("#timelapseCancelButton").show();
 			}
 			else {
