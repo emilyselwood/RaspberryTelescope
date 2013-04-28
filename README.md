@@ -27,10 +27,10 @@ Building and Running
 To get started on a Raspbery PI you will need to run the following commands in squence. This assumes you are in the home directory of a fresh wheezy-raspbian distro. 
 
     sudo apt-get update
-    sudo apt-get install git libgphoto2-2-dev libconfig-dev libreadline-dev libncurses-dev
+    sudo apt-get install git libgphoto2-2-dev libconfig-dev
     git clone git://github.com/wselwood/RaspberryTelescope.git
     cd RaspberryTelescope
-    make setup raspberrytelescope
+    make raspberrytelescope
     ./raspberytelescope
     
 Connect your camera and turn it on. In a web browser connect to http://raspberrypi:8080/ and you should see the live preview from your camera. 
@@ -40,23 +40,16 @@ On a pi the live preview can be pretty slow and not exactly live. Also on an iPa
 Make Targets:
 * raspberrytelescope : Builds every thing at the moment.
 * clean : clean
-* setup : Download and build lua
-* dist-clean : depends on clean. Clears out the lua folder and downloaded file.
 
-At the moment there two warnings one in the mongoose.c file and one in telescopecamera.c about a pointer being cast 
-to an integer if you are building on a 64bit machine. This doesn't happen on a Pi. 
-These are both due to using void * to store int data.
+At the moment there a few warnings in the mongoose.c file and one in telescopecamera.c about a pointer being cast 
+to an integer if you are building on a 64bit machine. 
 
 To run the web server simply execude the raspberrytelescope command. To exit press enter in the shell thats running the webserver. If a time lapse is running it will ask you to confirm by pressing enter again.
 
 Depencies
 ---------
 
-We need lua, libgphoto2 and libconfig
-
-libgphoto2 and libconfig can be got from you favourte package manager.
-
-Lua can be obtained using the setup make target which downloads it from from www.lua.org/ftp/ at the moment version 5.2.1 is downloaded
+We need libgphoto2 and libconfig which can be got from you favourte package manager.
 
 This also uses Mongoose and JQuery-UI but the needed files are included here. 
 
@@ -75,6 +68,8 @@ Why not just use a laptop and the software that comes with your camera? Well tha
 I have tested this with a RaspberryPi and my linux desktop and it works reasonably well. The set up was with a Pi wired into my network, Cannon 550D connected by USB cable and power provided from the mains. I have not hooked it up to my telescope yet, maybe next time there is a clear night.
 
 There is a list of compatible cameras on the [gphoto2 website] (http://www.gphoto.org/doc/remote/)
+
+Early versions of this code had a dependency on Lua which has been removed.
 
 Project Structure
 -----------------
