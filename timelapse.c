@@ -89,12 +89,12 @@ void * internal_capture(void * arg) {
 	int local_count = tl_get_count();
 	int local_interval = tl_get_interval();
 	
-	char time_buffer[15];
+	char time_buffer[15]; // yyyyMMddHHmmss
 	
 	const long nano_interval = seconds_to_nanos(local_interval);
-	const int num_len = digits(local_count); // we want to have the 
+	const int num_len = digits(local_count);  
 	
-	// file names in the format prefix_count_datestamp.extension
+	// we want to have the file names in the format prefix_count_datestamp.extension
 	const int buf_len = n_strlen(working_prefix) + num_len + n_strlen(working_extension) + 18; // 14 for date + 2 underscores + 1 dot + 1 EOS
 	char * buffer = (char*) malloc(sizeof(char) * buf_len);
 	
