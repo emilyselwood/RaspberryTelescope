@@ -304,7 +304,7 @@ static void *callback(enum mg_event event, struct mg_connection *conn) {
 				return NULL; // return null so it goes to the normal index page.
 			}
 			else {
-				return returnRedirect(conn, "/nocamera.lp", "");
+				return returnRedirect(conn, "/nocamera.html", "");
 			}
 		}
 		// check for internal urls and then if we don't find one of our magic ones fall back.
@@ -441,7 +441,7 @@ int main(int argc, char ** argv) {
 	const char *options[] = {
 		"listening_ports", port, //"8080",
 		"document_root", "./webRoot",
-		"index_files", "index.lp,index.html,index.htm",
+		"index_files", "index.html,index.htm",
 		"enable_directory_listing", "no",
 		NULL
 	};

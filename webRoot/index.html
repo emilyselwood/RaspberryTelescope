@@ -1,20 +1,4 @@
-<!doctype html><?
-	function findParam(request, param, default)
-		local start = string.find(request, param) + 2
-		if not start
-		then
-			return default
-		else
-			local param_end = string.find(request, '&', start)
-			if not param_end
-			then 
-				return string.sub(request, start) 
-			else
-				return string.sub(request, start, param_end - 1)
-			end
-		end
-	end
-?>
+<!doctype html>
 <html>
 <head>
 	<meta charset="utf-8">
@@ -187,6 +171,25 @@
 			$("#whiteBalanceSelect").change(whitebalanceChange);
 		}
 		
+		
+		function extractQueryParam(target) {
+			var values = window.location.search.substring(1).split('&');
+			for(i = 0; i < values.length; i++) {
+				var parts = values[i].split('=');
+				if(parts.length < 2) {
+					if(parts[0] == target) {
+						return "true";
+					}
+				}
+				else {
+					if(parts[0] == target) {
+						return parts[1];
+					}
+				}
+			}
+			return "";
+		}
+		
 		$(function() {
 		
 			$("#singleShotOptionsButton")
@@ -223,6 +226,28 @@
 			$("#timelapseCancelButton").button();
 			$("#timelapseCancelButton").hide();
 			
+			// set up any default values that are needed.
+			if(extractQueryParam("r") == 1) {
+				$("#immediatSetting").prop("checked", true);
+			}
+			if(extractQueryParam("d") == 1) {
+				$("#deleteSetting").prop("checked", true);
+			}
+			if(extractQueryParam("c") == 1) {
+				$("#copySetting").prop("checked", true);
+			}
+			
+			var name = extractQueryParam("n");
+			$("#captureName").val(name);
+			$("#tlCaptureName").val(name);
+			
+			var count = extractQueryParam("i");
+			$("#captureCount").val(count);
+			$("#tlCaptureCount").val(count);
+			
+			$("#tlInterval").val(extractQueryParam("t"));
+			
+			
 			setTimeout(updateImage, 1000);
 			
 			$.getJSON("/settings", handleJSONSettings);
@@ -258,40 +283,40 @@
 		<div id="singleShotOptions" class="optionsSubTab">
 			<div class="setting">
 				<label for="immediatSetting">Show image immediately</label>
-				<input type="checkbox" id="immediatSetting" <? if string.find(request_info.query_string, 'r=1') then print('checked=\"checked\"') end ?>/>
+				<input type="checkbox" id="immediatSetting"/>
 			</div>
 			<div class="setting">
 				<label for="deleteSetting">Delete from camera</label>
-				<input type="checkbox" id="deleteSetting" <? if string.find(request_info.query_string, 'd=1') then print('checked=\"checked\"') end ?>/>
+				<input type="checkbox" id="deleteSetting"/>
 			</div>
 			<div class="setting">
 				<label for="copySetting">Copy from camera</label>
-				<input type="checkbox" id="copySetting" <? if string.find(request_info.query_string, 'c=0') == nil then print('checked=\"checked\"') end ?>/>
+				<input type="checkbox" id="copySetting"/>
 			</div>
 			<div class="setting">
 				<label for="captureName">File Name:</label>
-				<input type="text" <? print('value=\"' .. findParam(request_info.query_string, 'n=', '') .. '\"') ?> id="captureName" />
+				<input type="text" id="captureName" />
 				Warning if the file already exists it will be overwritten. Leave blank for a date stamped file name.
 			</div>
 			<div class="setting">
 				<label for="captureCount">Number of frames:</label>
-				<input type="text" <? print('value=\"' .. findParam(request_info.query_string, 'i=', '1') .. '\"') ?> id="captureCount" />
+				<input type="text" id="captureCount" />
 				Instruct the camera to take this many pictures as fast as possible. A number will be appended to the file name along with the image file extention.
 			</div>
 		</div>
 		<div id="timelapseOptions" class="optionsSubTab">
 			<div class="setting">
 				<label for="tlCaptureName">File prefix:</label>
-				<input type="text" <? print('value=\"' .. findParam(request_info.query_string, 'n=', '') .. '\"') ?> id="tlCaptureName" />
+				<input type="text" id="tlCaptureName" />
 				Prefix for timelapse pictures.
 			</div>
 			<div class="setting">
 				<label for="tlCaptureCount">Number of frames:</label>
-				<input type="text" <? print('value=\"' .. findParam(request_info.query_string, 'i=', '1') .. '\"') ?> id="tlCaptureCount" />
+				<input type="text" id="tlCaptureCount" />
 			</div>
 			<div class="setting">
 				<label for="tlInterval">Time between frames:</label>
-				<input type="text" <? print('value=\"' .. findParam(request_info.query_string, 't=', '1') .. '\"') ?> id="tlInterval" />
+				<input type="text" id="tlInterval" />
 				Time in seconds
 			</div>
 		</div>
