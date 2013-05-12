@@ -119,7 +119,7 @@ void *processCapture(struct mg_connection *conn, const struct mg_request_info *r
 	config_lookup_string(&cfg, "capture.save_path", &path);
 	
 	char outputPath[500];
-	sprintf(outputPath, "%s%s", path, resultFileName);
+	snprintf(outputPath, 500, "%s%s", path, resultFileName);
 
 	int res;
 	if(captureCount > 1) {
@@ -152,7 +152,7 @@ void *processPreview(struct mg_connection *conn, const struct mg_request_info *r
 	config_lookup_string(&cfg, "capture.preview_path", &path);
 
 	char outputPath[500];
-	sprintf(outputPath, "%s/%s", path, resultFileName);
+	snprintf(outputPath, 500, "%s/%s", path, resultFileName);
 
 	if(tc_preview(outputPath) == 0) {
 		mg_send_file(conn, outputPath);
@@ -397,7 +397,7 @@ void nop_sighandler(int sig) {
 }
 
 // signal handler so we actually get some idea where the hell this thing crashes.
-// very helpful with gphoto2 being completely non thread safe.
+// very helpful with libgphoto2 being completely non thread safe.
 void bt_sighandler(int sig) {
 
 	void *trace[16];
@@ -416,7 +416,7 @@ void bt_sighandler(int sig) {
 		printf("[bt] #%d %s\n", i, messages[i]);
 
 		char syscom[256];
-		sprintf(syscom,"addr2line %p -e raspberrytelescope", trace[i]); //last parameter is the name of this app
+		snprintf(syscom, 256, "addr2line %p -e raspberrytelescope", trace[i]); //last parameter is the name of this app
 		if(system(syscom) != 0) {
 			printf("addr2line returned non zero exit code.\n");
 		}

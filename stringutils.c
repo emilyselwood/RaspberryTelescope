@@ -86,7 +86,7 @@ bool contains_path_chars(const char * s) {
 
 void indent(FILE * outputStream, const int depth) {
 	for( int i = 0; i < depth; i++ ) {
-		fprintf(outputStream, "\t");
+		fputc('\t', outputStream);
 	}
 }
 
