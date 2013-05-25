@@ -68,6 +68,12 @@ Why not just use a laptop and the software that comes with your camera? Well tha
 I have tested this with a RaspberryPi and my linux desktop and it works reasonably well. The set up was with a Pi wired into my network, Cannon 550D connected by USB cable and power provided from the mains. I have not hooked it up to my telescope yet, maybe next time there is a clear night.
 
 There is a list of compatible cameras on the [gphoto2 website] (http://www.gphoto.org/doc/remote/)
+Cameras tested with so far:
+Cannon 550D
+Cannon G10
+
+If you have been able to use this with any other cameras please let us know.
+
 
 Early versions of this code had a dependency on Lua which has been removed.
 
