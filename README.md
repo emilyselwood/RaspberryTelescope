@@ -17,20 +17,20 @@ Features
 Roadmap
 -------
 
-* Time laps 
+* Time laps (Sort of working, time between shots is a little erratic however)
 * Capture video
 
 
 Building and Running
 --------------------
 
-To get started on a Raspbery PI you will need to run the following commands in squence. This assumes you are in the home directory of a fresh wheezy-raspbian distro. 
+To get started on a Raspbery PI you will need to run the following commands in squence. This assumes you are in the home directory of a fresh raspbian distro with an active internet connection.
 
     sudo apt-get update
     sudo apt-get install git libgphoto2-2-dev libconfig-dev
     git clone git://github.com/wselwood/RaspberryTelescope.git
     cd RaspberryTelescope
-    make raspberrytelescope
+    make dependencies raspberrytelescope
     ./raspberytelescope
     
 Connect your camera and turn it on. In a web browser connect to http://raspberrypi:8080/ and you should see the live preview from your camera. 
@@ -51,12 +51,11 @@ Depencies
 
 We need libgphoto2 and libconfig which can be got from you favourte package manager.
 
-This also uses Mongoose and JQuery-UI but the needed files are included here. 
+JQuery-UI and JQuery are downloaded by using the dependencies target on make. The version number is included in the top of the make file.
 
-* The origional Mongoose files can be found here : https://github.com/valenok/mongoose
-* The origional JQuery-UI files can be found at http://jqueryui.com
+This also uses Mongoose  but the needed files are included here. The origional Mongoose files can be found here : https://github.com/valenok/mongoose
 
-The JQuery files are included in the build rather than pulled from the internet as this needs to work with out an internet connection, for instance where the Pi is working as a wi-fi hot spot.
+The JQuery files are included in the build rather than pulled from the CDN urls in the html as this needs to work with out an internet connection, for instance where the Pi is working as a wi-fi hot spot. However we do require an internet connection to set up the Pi (You have to download it from some where after all).
 
 Notes
 -----
@@ -70,10 +69,9 @@ I have tested this with a RaspberryPi and my linux desktop and it works reasonab
 There is a list of compatible cameras on the [gphoto2 website] (http://www.gphoto.org/doc/remote/)
 Cameras tested with so far:
 Cannon 550D
-Cannon G10
+Cannon G10 (Preview image is tiny and the settings use weird enums but they do work)
 
 If you have been able to use this with any other cameras please let us know.
-
 
 Early versions of this code had a dependency on Lua which has been removed.
 
