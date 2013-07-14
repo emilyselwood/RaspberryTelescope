@@ -18,7 +18,7 @@ Roadmap
 -------
 
 * Time laps (Sort of working, time between shots is a little erratic however)
-* Capture video
+* Capture video (May be impossible with current LibGPhoto2)
 
 
 Building and Running
@@ -35,11 +35,13 @@ To get started on a Raspbery PI you will need to run the following commands in s
     
 Connect your camera and turn it on. In a web browser connect to http://raspberrypi:8080/ and you should see the live preview from your camera. 
 
-On a pi the live preview can be pretty slow and not exactly live. Also on an iPad the browser will not let you set a java script time out for less than a second which causes very low frame rates.
+On a pi the live preview can be a bit low frame rate. Also on an iPad the browser will not let you set a java script time out for less than a second which causes very low frame rates.
 
 Make Targets:
 * raspberrytelescope : Builds every thing at the moment.
 * clean : clean
+* dist-clean : Clean out the JQuery-UI folder
+* dependencies : Download the JQuery, JQuery-UI and Theme files.
 
 At the moment there a few warnings in the mongoose.c file and one in telescopecamera.c about a pointer being cast 
 to an integer if you are building on a 64bit machine. 
