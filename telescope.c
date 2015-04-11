@@ -19,7 +19,7 @@ void signalTelescope(const char *address, const char *port, const int axis) {
 
   int tcpSocket = socket(AF_INET, SOCK_STREAM, 0);
   if (tcpSocket < 0) {
-    printf("\nError opening socket");
+    printf("Error opening socket\n");
     return;
   }
 
@@ -39,7 +39,7 @@ void signalTelescope(const char *address, const char *port, const int axis) {
 
   serveraddr.sin_port = htons(atoi(port));
   if (connect(tcpSocket, (struct sockaddr *) &serveraddr, sizeof(serveraddr)) < 0) {
-    printf("\nError Connecting");
+    printf("Error Connecting\n");
     return;
   }
 
@@ -47,10 +47,10 @@ void signalTelescope(const char *address, const char *port, const int axis) {
 
   sprintf(request, "Get /?%d HTTP/1.1\r\nHost:%s\r\n\r\n", axis, address);
 
-  printf("\n%s", request);
+  printf("%s\n", request);
 
   if (send(tcpSocket, request, strlen(request), 0) < 0) {
-    printf("Error with send()");
+    printf("Error with send()\n");
   }
 
   memset(request, 0, 1000);

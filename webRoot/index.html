@@ -112,7 +112,6 @@
 			$("#previewDiv").hide();
 			$("#captureOptions").hide();
 			$("#cameraOptions").hide();
-			$("#telescopeOptions").hide();
 
 			if($("#previewOptionsButton").is(":checked")) {
 				$("#previewDiv").show();
@@ -122,9 +121,6 @@
 			}
 			else if($("#cameraOptionsButton").is(":checked")) {
 				$("#cameraOptions").show();
-			}
-			else if($("#telescopeButton").is(":checked")) {
-				$("#telescopeOptions").show();
 			}
 			else {
 				$("#previewDiv").show();
@@ -213,7 +209,6 @@
 
 
 			$("#singleShotOptions").show();
-			$("#timelapseOptions").hide();
 
 			$( "#captureButton" )
 				.button()
@@ -303,13 +298,12 @@
 </head>
 <body>
 	<div class="menu">
-		<button id="captureButton" onclick="captureButtonClick" >Capture</button>
+		<button id="captureButton" onclick="captureButtonClick();" >Capture</button>
 
 		<input type="radio" name="optionsButtonSet" id="previewOptionsButton" checked="checked" /><label for="previewOptionsButton">Preview</label>
 		Settings:<span id="optionsButtonSet">
 			<input type="radio" name="optionsButtonSet" id="captureOptionsButton" /><label for="captureOptionsButton">Capture</label>
 			<input type="radio" name="optionsButtonSet" id="cameraOptionsButton" /><label for="cameraOptionsButton">Camera</label>
-			<input type="radio" name="optionsButtonSet" id="telescopeButton" /><label for="telescopeButton">Telescope</label>
 		</span>
 		<span id="timelapseStatus"></span>
 		<a id="timelapseCancelButton" href="/tlcancel">Cancel</a>
@@ -394,9 +388,6 @@
 			<label for="whiteBalanceSelect">White Balance</label>
 			<select id="whiteBalanceSelect"></select>
 		</div>
-	</div>
-	<div id="telescopeOptions" class="optionsTab">
-
 	</div>
 </body>
 </html>
