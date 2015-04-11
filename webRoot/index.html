@@ -86,7 +86,6 @@
 		}
 
 		function captureButtonClick() {
-			alert("")
 			if($("#singleShotOptionsButton").is(":checked")) {
 				captureSingleClick();
 			}
@@ -212,8 +211,7 @@
 			$("#singleShotOptions").show();
 
 			$( "#captureButton" )
-				.button()
-				.click(captureButtonClick);
+				.button();
 			$("#previewOptionsButton")
 				.button()
 				.click(optionsButtonClick);
