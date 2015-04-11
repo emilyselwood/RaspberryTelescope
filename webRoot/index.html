@@ -86,6 +86,7 @@
 		}
 
 		function captureButtonClick() {
+			alert("")
 			if($("#singleShotOptionsButton").is(":checked")) {
 				captureSingleClick();
 			}
@@ -326,7 +327,7 @@
 	<div id="captureOptions" class="optionsTab">
 		<div class="setting">
 			<span id="shootingOptionsSet">
-				<input type="radio" name="shootingOptionsSet" id="singleShotOptionsButton" /><label for="singleShotOptionsButton">Single</label>
+				<input type="radio" name="shootingOptionsSet" id="singleShotOptionsButton" checked="checked" /><label for="singleShotOptionsButton">Single</label>
 				<input type="radio" name="shootingOptionsSet" id="timelapseOptionsButton" /><label for="timelapseOptionsButton">Timelapse</label>
 			</span>
 		</div>
@@ -341,7 +342,7 @@
 			</div>
 			<div class="setting">
 				<label for="copySetting">Copy from camera</label>
-				<input type="checkbox" id="copySetting"/>
+				<input type="checkbox" id="copySetting" checked="checked" />
 			</div>
 			<div class="setting">
 				<label for="captureName">File Name:</label>
