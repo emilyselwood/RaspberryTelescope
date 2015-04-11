@@ -151,11 +151,8 @@
 			$.ajax("/setsetting?k=whitebalance&v="+newValue);
 		}
 
-
-
 		function telescopeButtonClick(axis) {
 			$.ajax("/telescope?a=" + axis);
-
 		}
 
 		function populateSelect(name, choices, selected) {
@@ -320,7 +317,17 @@
 
 	</div>
 	<div id="previewDiv">
-		<img id="previewImage" src="/preview" />
+		<img id="previewImage" src="/preview" /><br />
+		Move:<span id="directionButtonSet">
+			<button onclick="telescopeButtonClick(1);" id="leftButton">Left</button>
+			<button onclick="telescopeButtonClick(2);" id="upButton" >Up</button>
+			<button onclick="telescopeButtonClick(3);" id="downButton" >Down</button>
+			<button onclick="telescopeButtonClick(4);" id="rightButton" >Right</button>
+		</span>
+		Focus:<span id="focusButtonSet">
+			<button onclick="telescopeButtonClick(5);" id="inButton" >In</button>
+			<button onclick="telescopeButtonClick(6);" id="outButton" >Out</button>
+		</span>
 	</div>
 	<div id="captureOptions" class="optionsTab">
 		<div class="setting">
@@ -389,16 +396,7 @@
 		</div>
 	</div>
 	<div id="telescopeOptions" class="optionsTab">
-		Move:<span id="directionButtonSet">
-			<button onclick="telescopeButtonClick(1);" id="leftButton">Left</button>
-			<button onclick="telescopeButtonClick(2);" id="upButton" >Up</button>
-			<button onclick="telescopeButtonClick(3);" id="downButton" >Down</button>
-			<button onclick="telescopeButtonClick(4);" id="rightButton" >Right</button>
-		</span>
-		Focus:<span id="focusButtonSet">
-			<button onclick="telescopeButtonClick(5);" id="inButton" >In</button>
-			<button onclick="telescopeButtonClick(6);" id="outButton" >Out</button>
-		</span>
+
 	</div>
 </body>
 </html>
