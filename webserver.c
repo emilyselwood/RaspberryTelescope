@@ -19,6 +19,7 @@
 #include "stringutils.h"
 #include "fileutils.h"
 #include "timelapse.h"
+#include "telescope.h"
 
 #define SUMMARY_URL "/summary"
 #define SUMMARY_URL_LENGTH 8
@@ -49,6 +50,9 @@
 
 #define TIME_LAPSE_CANCEL_URL "/tlcancel"
 #define TIME_LAPSE_CANCEL_URL_LENGTH 9
+
+#define TELESCOPE_URL "/telescope"
+#define TELESCOPE_URL_LENGTH 10
 
 // global configuration as this will be accessed in the call backs.
 config_t cfg;
@@ -110,14 +114,14 @@ void *processCapture(struct mg_connection *conn, const struct mg_request_info *r
 		printf("Invalid file name %s\n", resultFileName);
 		return returnError(conn, 400, "Invalid file name");
 	}
-	
+
 	bool shouldSendBack = bool_query_param(request_info, "r");
 	bool shouldDelete = bool_query_param(request_info, "d");
 	bool shouldCopy = bool_query_param_def(request_info, "c", true);
 
 	const char *path;
 	config_lookup_string(&cfg, "capture.save_path", &path);
-	
+
 	char outputPath[500];
 	snprintf(outputPath, 500, "%s%s", path, resultFileName);
 
@@ -129,7 +133,7 @@ void *processCapture(struct mg_connection *conn, const struct mg_request_info *r
 	else {
 		res = tc_take_picture(outputPath, shouldDelete, shouldCopy);
 	}
-	
+
 	if(res > 0) {
 		if(shouldSendBack && (captureCount <= 1)) {
 			mg_send_file(conn, outputPath);
@@ -168,9 +172,9 @@ void * processSettings(struct mg_connection *conn, const struct mg_request_info 
 	char * buffer;
     size_t size;
 	FILE * stream = open_memstream(&buffer, &size);
-	
+
 	tc_settings(stream);
-	
+
 	fclose(stream);
 	returnResult(conn, 200, "OK", buffer, size);
 	free(buffer);
@@ -183,14 +187,14 @@ void * processSetSetting(struct mg_connection *conn, const struct mg_request_inf
 
 	int keyLength = str_query_param(request_info, "k", key, 50);
 	int valueLength = str_query_param(request_info, "v", value, 50);
-	
+
 	if(keyLength <= 0 || valueLength <= 0) {
 		return returnError(conn, 400, "Missing setting information");
 	}
 	else {
 		int res = tc_set_setting(key, value);
 		if(res == 0) {
-			return returnResult(conn, 200, "OK", "", 0);	
+			return returnResult(conn, 200, "OK", "", 0);
 		}
 		else {
 			return returnError(conn, 503, "Failed to change setting");
@@ -206,7 +210,7 @@ void * processListImages(struct mg_connection *conn, const struct mg_request_inf
 
 	const char *path;
 	config_lookup_string(&cfg, "capture.save_path", &path);
-	
+
 	list_img_dir(path, stream);
 
 	fclose(stream);
@@ -217,14 +221,14 @@ void * processListImages(struct mg_connection *conn, const struct mg_request_inf
 
 
 void * processImage(struct mg_connection *conn, const struct mg_request_info *request_info) {
-	
+
 	if(n_strlen(request_info->uri) <= IMAGE_URL_LENGTH) {
 		return returnError(conn, 400, "Missing parameter");
 	}
-	
+
 	const char * name = &(request_info->uri[IMAGE_URL_LENGTH]);
 	const int nameLength = n_strlen(name);
-	
+
 	if(name == '\0' || nameLength == 0) {
 		return returnError(conn, 400, "Missing image name");
 	}
@@ -232,45 +236,45 @@ void * processImage(struct mg_connection *conn, const struct mg_request_info *re
 	if(contains_path_chars(name)) {
 		return returnError(conn, 400, "Invalid image name");
 	}
-	
+
 	const char * path;
 	config_lookup_string(&cfg, "capture.save_path", &path);
-	
+
 	int fullLength = n_strlen(path) + nameLength + 1;
-	
+
 	char * fullpath = (char*)malloc(sizeof(char) * (fullLength + 1));
-	
-	snprintf(fullpath, fullLength, "%s%s", path, name); 
-	
+
+	snprintf(fullpath, fullLength, "%s%s", path, name);
+
 	printf("sending image: %s\n", fullpath);
 	mg_send_file(conn, fullpath);
-	
+
 	free(fullpath);
 	return "";
-	
+
 }
 
 void * processTimelapse(struct mg_connection *conn, const struct mg_request_info *request_info) {
-	
+
 	int interval = int_query_param(request_info, "t");
 	int counter  = int_query_param(request_info, "i");
-	
+
 	char prefix[50];
 	int prefixLength = str_query_param(request_info, "n", prefix, 50);
-	
+
 	if(interval == 0 || counter == 0 || prefixLength == 0) {
 		return returnError(conn, 400, "Missing parameters");
 	}
-	
+
 	const char *path;
 	config_lookup_string(&cfg, "capture.save_path", &path);
-	
+
 	int fullLen = prefixLength + n_strlen(path) + 1;
 	// note this will get freed by the time lapse thread so that this string is avaible through out the time lapse
 	char * fullPath = (char*) malloc(sizeof(char) * fullLen);
-	
+
 	snprintf(fullPath, fullLen, "%s%s", path, prefix);
-	
+
 	tl_start(interval, counter, fullPath, "jpg");
 	return returnRedirect(conn, "/?", request_info->query_string );
 }
@@ -279,9 +283,9 @@ void * processTLStatus(struct mg_connection *conn, const struct mg_request_info 
 	char * buffer;
     size_t size;
 	FILE * stream = open_memstream(&buffer, &size);
-	
+
 	tl_get_status(stream);
-	
+
 	fclose(stream);
 	returnResult(conn, 200, "OK", buffer, size);
 	free(buffer);
@@ -292,6 +296,24 @@ void * processTLCancel(struct mg_connection *conn, const struct mg_request_info 
 	printf("Cancelling timelapse\n");
 	tl_cancel();
 	return returnRedirect(conn, "/", "");
+}
+
+void * processTelescope(struct mg_connection *conn, const struct mg_request_info *request_info) {
+	printf("telescope?\n");
+	
+	int axis = int_query_param(request_info, "a");
+
+	if(axis == 0) {
+		return returnError(conn, 400, "Missing parameters");
+	}
+
+	const char *address;
+	const char *port;
+	config_lookup_string(&cfg, "telescope.address", &address);
+	config_lookup_string(&cfg, "telescope.port", &port);
+
+	signalTelescope(address, port, axis);
+	return returnResult(conn, 200, "OK", "", 0);
 }
 
 static void *callback(enum mg_event event, struct mg_connection *conn) {
@@ -338,6 +360,9 @@ static void *callback(enum mg_event event, struct mg_connection *conn) {
 		else if(strncmp(request_info->uri, TIME_LAPSE_CANCEL_URL, TIME_LAPSE_CANCEL_URL_LENGTH) == 0) {
 			return processTLCancel(conn, request_info);
 		}
+		else if(strncmp(request_info->uri, TELESCOPE_URL, TELESCOPE_URL_LENGTH) == 0) {
+			return processTelescope(conn, request_info);
+		}
 		else {
 			// if we return null it falls out the end of this handler and tries the document_root to see if a file exists there.
 			return NULL;
@@ -349,16 +374,16 @@ static void *callback(enum mg_event event, struct mg_connection *conn) {
 }
 
 void clean_up() {
-	
+
 	// Make sure we stop any running time lapse.
 	tl_cancel();
 	tl_wait();
-	
+
 	config_destroy(&cfg);
 	tc_reset();
 }
 
-// as well as setting up the config system we make sure that the  
+// as well as setting up the config system we make sure that the
 // folders we are going to need exist.
 bool setup_config() {
 	config_init(&cfg);
@@ -380,7 +405,7 @@ bool setup_config() {
 		clean_up();
 		return false;
 	}
-	
+
 	const char *savePath;
 	config_lookup_string(&cfg, "capture.save_path", &savePath);
 	if(!dir_exits(savePath)) {
@@ -429,14 +454,14 @@ int main(int argc, char ** argv) {
 
 	signal(SIGSEGV, bt_sighandler);   // install our back trace handler
 	signal(SIGALRM, nop_sighandler);
-	
+
 	if(!setup_config()) {
 		return -2;
 	}
-	
+
 	const char *port;
 	config_lookup_string(&cfg, "webserver.port", &port);
-	
+
 	struct mg_context *ctx;
 	const char *options[] = {
 		"listening_ports", port, //"8080",
@@ -448,13 +473,13 @@ int main(int argc, char ** argv) {
 
 	// this actually starts the web server.
 	ctx = mg_start(&callback, NULL, options);
-	
+
 	getchar(); // Wait until user hits "enter"
 	if(tl_in_progress()) {
 		printf("WARNING: There is a time lapse in progress. Press Enter agian to exit\n");
 		getchar();
 	}
-	
+
 	mg_stop(ctx);
 
 	clean_up();

@@ -7,7 +7,7 @@ JQUERYVERSION=1.9.1
 JQUERYUIVERSION=1.10.3
 
 raspberrytelescope:
-	$(CC) stringutils.c fileutils.c telescopecamera.c timelapse.c mongoose.c webserver.c $(CFLAGS) $(LDFLAGS) -o $(PROG)
+	$(CC) *.c $(CFLAGS) $(LDFLAGS) -o $(PROG)
 
 .PHONY : clean
 clean:
@@ -15,7 +15,7 @@ clean:
 
 dist-clean:
 	rm -rf webRoot/jquery-ui
-	
+
 dependencies:
 	mkdir -p webRoot/jquery-ui/images
 	wget http://code.jquery.com/jquery-$(JQUERYVERSION).js -O webRoot/jquery-ui/jquery.js
@@ -25,5 +25,3 @@ dependencies:
 	unzip -j jquery-ui-themes.zip jquery-ui-themes-$(JQUERYUIVERSION)/themes/dark-hive/jquery-ui.css -d webRoot/jquery-ui/
 	unzip -j jquery-ui-themes.zip jquery-ui-themes-$(JQUERYUIVERSION)/themes/dark-hive/jquery.ui.theme.css -d webRoot/jquery-ui/
 	rm -f jquery-ui-themes.zip
-	
-	
