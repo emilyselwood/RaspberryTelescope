@@ -102,12 +102,7 @@ void *processCapture(struct mg_connection *conn, const struct mg_request_info *r
 
 	char timeStampedName[19];
 	time_t t = time(NULL);
-	if(captureCount > 1) {
-		strftime(timeStampedName, 19, "%Y%m%d%H%M%S", localtime(&t));
-	}
-	else {
-		strftime(timeStampedName, 19, "%Y%m%d%H%M%S.jpg", localtime(&t));
-	}
+	strftime(timeStampedName, 19, "%Y%m%d%H%M%S", localtime(&t));
 	str_query_param_def(request_info, "n", timeStampedName, resultFileName, 500);
 
 	if(contains_path_chars(resultFileName)) {
@@ -300,7 +295,7 @@ void * processTLCancel(struct mg_connection *conn, const struct mg_request_info 
 
 void * processTelescope(struct mg_connection *conn, const struct mg_request_info *request_info) {
 	printf("telescope?\n");
-	
+
 	int axis = int_query_param(request_info, "a");
 
 	if(axis == 0) {

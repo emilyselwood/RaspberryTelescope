@@ -224,7 +224,14 @@ void internal_take_picture(const char * name, const bool delete, const bool copy
 	gp_camera_capture(camera, GP_CAPTURE_IMAGE, &camera_file_path, context);
 
 	if(copy) {
-		int fd = open(name, O_CREAT | O_WRONLY, 0644);
+		// extract the extension from the source file and append it to our name.
+		// so we get the right name out of it.
+
+		char *dot = strrchr(camera_file_path.name, '.');
+		char * fileName = (char*) malloc(sizeof(char) * (strlen(name) + strlen(dot)));
+		sprintf(fileName, "%s%s", name, dot);
+
+		int fd = open(fileName, O_CREAT | O_WRONLY, 0644);
 		gp_file_new_from_fd(&canonfile, fd);
 		gp_camera_file_get(camera, camera_file_path.folder, camera_file_path.name, GP_FILE_TYPE_NORMAL, canonfile, context);
 	}
