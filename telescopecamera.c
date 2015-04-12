@@ -22,14 +22,18 @@ pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 // NOTE : Do not try and reset the camera in here. It will cause seg faults.
 static void ctx_error_func (GPContext *context, const char *str, void *data)
 {
-	fprintf(stderr, "\n*** Contexterror ***\n%s\n", str);
+	fprintf(stderr, "\n*** Contexterror ***\n");
+	fprintf(stderr, str, data);
+	fprintf(stderr, "\n");
 	fflush(stderr);
 }
 
 // status logger. These seem to be pretty rare.
 static void ctx_status_func (GPContext *context, const char *str, void *data)
 {
-	fprintf(stderr, "status: %s\n", str);
+	fprintf(stderr, "status:");
+	fprintf(stderr, str, data);
+	fprintf(stderr, "\n");
 	fflush(stderr);
 }
 
