@@ -179,14 +179,15 @@
 			populateSelect('#apertureSelect', data.main.capturesettings.aperture.choices, data.main.capturesettings.aperture.value);
 			populateSelect('#whiteBalanceSelect', data.main.imgsettings.whitebalance.choices, data.main.imgsettings.whitebalance.value);
 			populateSelect('#imageResultSelect', data.main.imgsettings.imageformat.choices, data.main.imgsettings.imageformat.value);
-			populateSelect('#imageResultSDSelect', data.main.imgsettings.imageformatsd.choices, data.main.imgsettings.imageformatsd.value);
 
 			$("#isoSelect").change(isoChange);
 			$("#shutterSpeedSelect").change(shutterspeedChange);
 			$("#apertureSelect").change(apertureChange);
 			$("#whiteBalanceSelect").change(whitebalanceChange);
 			$("#imageResultSelect").change(imageResultChange);
-			$("#imageResultSDSelect").change(imageResultSDChange);
+
+			$("#batteryLabel").text(data.main.status.batterylevel.value + "%");
+
 		}
 
 
@@ -321,6 +322,7 @@
 		<span id="timelapseStatus"></span>
 		<a id="timelapseCancelButton" href="/tlcancel">Cancel</a>
 		<span id="tick">-50</span>
+		Battry: <span id="batteryLabel">100%</span>
 
 	</div>
 	<div id="previewDiv">
@@ -404,10 +406,6 @@
 		<div class="setting">
 			<label for="imageResultSelect">Result type</label>
 			<select id="imageResultSelect"></select>
-		</div>
-		<div class="setting">
-			<label for="imageResultSDSelect">Result type SD</label>
-			<select id="imageResultSDSelect"></select>
 		</div>
 	</div>
 </body>
