@@ -149,6 +149,11 @@
 
 		function imageResultChange() {
 			var newValue = $("#imageResultSelect").find(":selected").text();
+			$.ajax("/setsetting?k=imageformat&v="+newValue);
+		}
+
+		function imageResultSDChange() {
+			var newValue = $("#imageResultSDSelect").find(":selected").text();
 			$.ajax("/setsetting?k=imageformatsd&v="+newValue);
 		}
 
@@ -173,13 +178,15 @@
 			populateSelect('#shutterSpeedSelect', data.main.capturesettings.shutterspeed.choices, data.main.capturesettings.shutterspeed.value);
 			populateSelect('#apertureSelect', data.main.capturesettings.aperture.choices, data.main.capturesettings.aperture.value);
 			populateSelect('#whiteBalanceSelect', data.main.imgsettings.whitebalance.choices, data.main.imgsettings.whitebalance.value);
-			populateSelect('#imageResultSelect', data.main.imgsettings.imageformatsd.choices, data.main.imgsettings.imageformatsd.value);
+			populateSelect('#imageResultSelect', data.main.imgsettings.imageformat.choices, data.main.imgsettings.imageformat.value);
+			populateSelect('#imageResultSDSelect', data.main.imgsettings.imageformatsd.choices, data.main.imgsettings.imageformatsd.value);
 
 			$("#isoSelect").change(isoChange);
 			$("#shutterSpeedSelect").change(shutterspeedChange);
 			$("#apertureSelect").change(apertureChange);
 			$("#whiteBalanceSelect").change(whitebalanceChange);
 			$("#imageResultSelect").change(imageResultChange);
+			$("#imageResultSDSelect").change(imageResultSDChange);
 		}
 
 
@@ -397,6 +404,11 @@
 		<div class="setting">
 			<label for="imageResultSelect">Result type</label>
 			<select id="imageResultSelect"></select>
+		</div>
+		<div class="setting">
+			<label for="imageResultSDSelect">Result type SD</label>
+			<select id="imageResultSDSelect"></select>
+		</div>
 	</div>
 </body>
 </html>
