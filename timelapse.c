@@ -21,7 +21,6 @@
 // holds the running parameters of a time lapse run.
 // these should not be accessable outside of this file.
 const char * working_extension;
-char * working_prefix;
 int working_count = 0;
 int working_interval = 0;
 
@@ -78,46 +77,46 @@ long time_diff(struct timeval * start, struct timeval * end) {
 
 // processing function for our thread.
 void * internal_capture(void * arg) {
-	
+
 	pthread_mutex_lock(&timelapse_lock);
-	
+
 	struct timeval start, end;
-	
+
 	struct timespec to_wait, waited;
-	
+
 	// these shouldn't change during a run and so this should lower contention.
 	int local_count = tl_get_count();
 	int local_interval = tl_get_interval();
-	
+
 	char time_buffer[15]; // yyyyMMddHHmmss
-	
+
 	const long nano_interval = seconds_to_nanos(local_interval);
-	const int num_len = digits(local_count);  
-	
+	const int num_len = digits(local_count);
+
 	// we want to have the file names in the format prefix_count_datestamp.extension
-	const int buf_len = n_strlen(working_prefix) + num_len + n_strlen(working_extension) + 18; // 14 for date + 2 underscores + 1 dot + 1 EOS
+	const int buf_len = num_len + 18; // 14 for date + 2 underscores + 1 dot + 1 EOS
 	char * buffer = (char*) malloc(sizeof(char) * buf_len);
-	
+
 	long diff = 0;
 	for(int i = 0; i < local_count; i++) {
-		
-		gettimeofday(&start, NULL); 
+
+		gettimeofday(&start, NULL);
 		time_t t = time(NULL);
 		strftime(time_buffer, 15, "%Y%m%d%H%M%S", localtime(&t));
-		
-		snprintf(buffer, buf_len, "%s_%0*d_%s.%s", working_prefix, num_len, i+1, time_buffer, working_extension);
-		
+
+		snprintf(buffer, buf_len, "%0*d_%s", num_len, i+1, time_buffer);
+
 		printf("Timelapse capture: %s\n", buffer);
-		
+
 		tc_take_picture(buffer, false, true);
-		
+
 		pthread_mutex_lock(&parameter_lock);
 		working_progress = i + 1;
 		pthread_mutex_unlock(&parameter_lock);
-		
-		gettimeofday(&end, NULL); 
-		
-		// In the finally itteration it is pointless to wait.
+
+		gettimeofday(&end, NULL);
+
+		// In the final itteration it is pointless to wait.
 		if(i < (local_count -1)) {
 			diff = time_diff(&start, &end);
 			nanos_to_time(&to_wait, nano_interval - diff);
@@ -130,7 +129,7 @@ void * internal_capture(void * arg) {
 				pthread_mutex_unlock(&parameter_lock);
 			}
 		}
-		
+
 		pthread_mutex_lock(&parameter_lock);
 		if(should_cancel) {
 			pthread_mutex_unlock(&parameter_lock);
@@ -138,20 +137,19 @@ void * internal_capture(void * arg) {
 		}
 		pthread_mutex_unlock(&parameter_lock);
 	}
-	
+
 	free(buffer);
-	free(working_prefix);
-		
+
 	working = false;
 	pthread_mutex_unlock(&timelapse_lock);
 	return NULL;	// end of thread;
 }
 
-int tl_start(const int interval, const int count, char * prefix, const char * extension) {
+int tl_start(const int interval, const int count, char * prefix) {
 	if(tl_in_progress()) {
 		return -1;
 	}
-	
+
 	// With the two locks here I don't think its possible to create two threads.
 	// either way we shouldn't be creating stupid numbers of these threads.
 	// there should only ever be one in play.
@@ -159,13 +157,10 @@ int tl_start(const int interval, const int count, char * prefix, const char * ex
 	pthread_mutex_lock(&parameter_lock);
 	working_interval = interval;
 	working_count = count;
-	
-	working_prefix = prefix;
-	working_extension = extension;
-	
+
 	working = true;
 	should_cancel = false;
-	
+
 	pthread_mutex_unlock(&timelapse_lock);
 	pthread_create(&worker, NULL, &internal_capture, NULL);
 	pthread_mutex_unlock(&parameter_lock);
@@ -192,7 +187,7 @@ int tl_get_interval() {
 	pthread_mutex_unlock(&parameter_lock);
 	return result;
 }
- 
+
 bool tl_in_progress() {
 	pthread_mutex_lock(&parameter_lock);
 	bool result = working;
@@ -215,7 +210,7 @@ void tl_wait() {
 
 int tl_get_status(FILE * output) {
 	fprintf(output, "{\n");
-	
+
 	if(tl_in_progress()) {
 		fprintf(output, "\t\"status\" : \"processing\",\n");
 		fprintf(output, "\t\"interval\" : \"%d\",\n", tl_get_interval());
@@ -227,6 +222,6 @@ int tl_get_status(FILE * output) {
 	}
 	fprintf(output, "}\n");
 	fflush(output);
-	
+
 	return 0;
 }

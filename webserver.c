@@ -270,7 +270,7 @@ void * processTimelapse(struct mg_connection *conn, const struct mg_request_info
 
 	snprintf(fullPath, fullLen, "%s%s", path, prefix);
 
-	tl_start(interval, counter, fullPath, "jpg");
+	tl_start(interval, counter, fullPath);
 	return returnRedirect(conn, "/?", request_info->query_string );
 }
 
