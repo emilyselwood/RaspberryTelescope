@@ -295,19 +295,24 @@ void * processTLCancel(struct mg_connection *conn, const struct mg_request_info 
 
 void * processTelescope(struct mg_connection *conn, const struct mg_request_info *request_info) {
 	printf("telescope?\n");
+	char axisString[50];
+	int axisLength = str_query_param(request_info, "a", axisString, 50);
 
-	int axis = int_query_param(request_info, "a");
+	if(axisLength == 0) {
+		return returnError(conn, 400, "Missing parameters");
+	}
+	int axis = atoi(axisString);
 
 	if(axis == 0) {
 		return returnError(conn, 400, "Missing parameters");
 	}
 
-	const char *address;
+	//const char *address;
 	const char *port;
-	config_lookup_string(&cfg, "telescope.address", &address);
-	config_lookup_string(&cfg, "telescope.port", &port);
+	//config_lookup_string(&cfg, "telescope.address", &address);
+	config_lookup_string(&cfg, "telescope.serial", &port);
 
-	signalTelescope(address, port, axis);
+	serialTelescope(port, axis);
 	return returnResult(conn, 200, "OK", "", 0);
 }
 
