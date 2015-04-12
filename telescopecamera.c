@@ -228,12 +228,14 @@ void internal_take_picture(const char * name, const bool delete, const bool copy
 		// so we get the right name out of it.
 
 		char *dot = strrchr(camera_file_path.name, '.');
-		char * fileName = (char*) malloc(sizeof(char) * (strlen(name) + strlen(dot)));
+		char * fileName = (char*) malloc(sizeof(char) * (strlen(name) + strlen(dot) + 1));
 		sprintf(fileName, "%s%s", name, dot);
 
 		int fd = open(fileName, O_CREAT | O_WRONLY, 0644);
 		gp_file_new_from_fd(&canonfile, fd);
 		gp_camera_file_get(camera, camera_file_path.folder, camera_file_path.name, GP_FILE_TYPE_NORMAL, canonfile, context);
+
+		free(fileName);
 	}
 
 	if(delete) {
