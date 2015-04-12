@@ -149,12 +149,12 @@
 
 		function imageResultChange() {
 			var newValue = $("#imageResultSelect").find(":selected").text();
-			$.ajax("/setsetting?k=imageformat&v="+newValue);
+			$.ajax("/setsetting?k=imageformat&v="+encodeURIComponent(newValue));
 		}
 
 		function imageResultSDChange() {
 			var newValue = $("#imageResultSDSelect").find(":selected").text();
-			$.ajax("/setsetting?k=imageformatsd&v="+newValue);
+			$.ajax("/setsetting?k=imageformatsd&v="+encodeURIComponent(newValue));
 		}
 
 		function telescopeButtonClick(axis) {
