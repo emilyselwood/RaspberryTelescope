@@ -147,6 +147,11 @@
 			$.ajax("/setsetting?k=whitebalance&v="+newValue);
 		}
 
+		function imageResultChange() {
+			var newValue = $("#imageResultSelect").find(":selected").text();
+			$.ajax("/setsetting?k=imageformatsd&v="+newValue);
+		}
+
 		function telescopeButtonClick(axis) {
 			$.ajax("/telescope?a=" + axis);
 		}
@@ -168,11 +173,13 @@
 			populateSelect('#shutterSpeedSelect', data.main.capturesettings.shutterspeed.choices, data.main.capturesettings.shutterspeed.value);
 			populateSelect('#apertureSelect', data.main.capturesettings.aperture.choices, data.main.capturesettings.aperture.value);
 			populateSelect('#whiteBalanceSelect', data.main.imgsettings.whitebalance.choices, data.main.imgsettings.whitebalance.value);
+			populateSelect('#imageResultSelect', data.main.imgsettings.imageformatsd.choices, data.main.imgsettings.imageformatsd.value);
 
 			$("#isoSelect").change(isoChange);
 			$("#shutterSpeedSelect").change(shutterspeedChange);
 			$("#apertureSelect").change(apertureChange);
 			$("#whiteBalanceSelect").change(whitebalanceChange);
+			$("#imageResultSelect").change(imageResultChange);
 		}
 
 
@@ -387,6 +394,9 @@
 			<label for="whiteBalanceSelect">White Balance</label>
 			<select id="whiteBalanceSelect"></select>
 		</div>
+		<div class="setting">
+			<label for="imageResult">Result type</label>
+			<select id="imageResult"></select>
 	</div>
 </body>
 </html>
