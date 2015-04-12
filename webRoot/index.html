@@ -186,7 +186,7 @@
 			$("#whiteBalanceSelect").change(whitebalanceChange);
 			$("#imageResultSelect").change(imageResultChange);
 
-			$("#batteryLabel").text(data.main.status.batterylevel.value + "%");
+			$("#batteryLabel").text(data.main.status.batterylevel.value);
 
 		}
 
@@ -321,8 +321,9 @@
 		</span>
 		<span id="timelapseStatus"></span>
 		<a id="timelapseCancelButton" href="/tlcancel">Cancel</a>
-		<span id="tick">-50</span>
 		Battry: <span id="batteryLabel">100%</span>
+		Framerate: <span id="tick">-50</span>
+
 
 	</div>
 	<div id="previewDiv">
