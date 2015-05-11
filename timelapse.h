@@ -7,7 +7,7 @@
  * Capture a frame every interval seconds until count frames have been taken
  * prefix is not const because we will be freeing it when the time lase finishes.
  */
-int tl_start(const int interval, const int count, char * prefix, const char * extension);
+int tl_start(const int interval, const int count, char * prefix);
 
 /**
  * Several getters for the status of the timelapse system

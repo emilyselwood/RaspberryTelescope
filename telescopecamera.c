@@ -14,21 +14,26 @@ GPContext *context = NULL;
 bool initFailed = false;
 bool resetNextTime = false;
 
-// big camera lock. Used around all the public functions to prevent multiple threads trying to access this at the same time.
+// big camera lock. Used around all the public functions to prevent
+// multiple threads trying to access this at the same time.
 pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
 
 // error logging function for things failing in the gphoto2 library.
 // NOTE : Do not try and reset the camera in here. It will cause seg faults.
 static void ctx_error_func (GPContext *context, const char *str, void *data)
 {
-	fprintf(stderr, "\n*** Contexterror ***\n%s\n", str);
+	fprintf(stderr, "\n*** Contexterror ***\n");
+	fprintf(stderr, str, data);
+	fprintf(stderr, "\n");
 	fflush(stderr);
 }
 
 // status logger. These seem to be pretty rare.
 static void ctx_status_func (GPContext *context, const char *str, void *data)
 {
-	fprintf(stderr, "status: %s\n", str);
+	fprintf(stderr, "status:");
+	fprintf(stderr, str, data);
+	fprintf(stderr, "\n");
 	fflush(stderr);
 }
 
@@ -46,7 +51,7 @@ int _lookup_widget(CameraWidget*widget, const char *key, CameraWidget **child) {
 	}
 	return ret;
 }
-	
+
 int getWidget(CameraWidget ** widget, CameraWidget ** child, const char * setting) {
 	CameraWidgetType type;
 
@@ -84,14 +89,14 @@ int internal_set_setting(const char * setting, const char * value) {
 		fprintf (stderr, "camera_get_config failed: %d\n", ret);
 		return ret;
 	}
-	
+
 	ret = gp_widget_set_value(child, value);
 	if (ret < GP_OK) {
 		fprintf (stderr, "could not set widget value: %d\n", ret);
 		gp_widget_free (widget);
 		return ret;
 	}
-	
+
 	/* This stores it on the camera again */
 	ret = gp_camera_set_config (camera, widget, context);
 	if (ret < GP_OK) {
@@ -99,7 +104,7 @@ int internal_set_setting(const char * setting, const char * value) {
 		gp_widget_free (widget);
 		return ret;
 	}
-	
+
 	gp_widget_free (widget);
 	return 0;
 }
@@ -120,16 +125,16 @@ GPContext* create_context() {
 
 // function to make sure the camara is initalised
 void initCamaraAndContext() {
-	
+
 	if(resetNextTime) {
 		tc_reset();
 		resetNextTime = false;
 	}
-	
+
 	if( context == NULL && camera == NULL ) {
 		context = create_context ();
 		gp_camera_new (&camera);
-		
+
 		if( gp_camera_init (camera, context) < GP_OK ) {
 			initFailed = true;
 			tc_reset();
@@ -151,7 +156,7 @@ void tc_reset() {
 
 int waitForCaptureComplete() {
 	pthread_mutex_lock(&lock);
-	
+
 	int waitTime = 2000;
 	CameraEventType type;
 	void *data;
@@ -174,12 +179,12 @@ int waitForCaptureComplete() {
 	}
 	pthread_mutex_unlock(&lock);
 	return 0;
-	
+
 }
 
 /**
  * public method to get the summary information for the camara.
- * 
+ *
  * takes a string buffer to put the information in and returns the length writen.
  */
 int tc_get_summary(char * content, const int size_of) {
@@ -215,19 +220,28 @@ void internal_take_picture(const char * name, const bool delete, const bool copy
 	/* NOP: This gets overridden in the library to /capt0000.jpg */
 	strcpy(camera_file_path.folder, "/");
 	strcpy(camera_file_path.name, name);
-	
+
 	gp_camera_capture(camera, GP_CAPTURE_IMAGE, &camera_file_path, context);
-	
+
 	if(copy) {
-		int fd = open(name, O_CREAT | O_WRONLY, 0644);
+		// extract the extension from the source file and append it to our name.
+		// so we get the right name out of it.
+
+		char *dot = strrchr(camera_file_path.name, '.');
+		char * fileName = (char*) malloc(sizeof(char) * (strlen(name) + strlen(dot) + 1));
+		sprintf(fileName, "%s%s", name, dot);
+
+		int fd = open(fileName, O_CREAT | O_WRONLY, 0644);
 		gp_file_new_from_fd(&canonfile, fd);
 		gp_camera_file_get(camera, camera_file_path.folder, camera_file_path.name, GP_FILE_TYPE_NORMAL, canonfile, context);
+
+		free(fileName);
 	}
 
 	if(delete) {
 		gp_camera_file_delete(camera, camera_file_path.folder, camera_file_path.name, context);
 	}
-	
+
 	if(copy) {
 		gp_file_free(canonfile);
 	}
@@ -236,7 +250,7 @@ void internal_take_picture(const char * name, const bool delete, const bool copy
 int tc_take_picture(const char * name, const bool delete, const bool copy) {
 
 	pthread_mutex_lock(&lock);
-	
+
 	initCamaraAndContext();
 
 	if( initFailed ) {
@@ -250,7 +264,7 @@ int tc_take_picture(const char * name, const bool delete, const bool copy) {
 		else {
 			internal_set_setting("capturetarget", "Internal RAM");
 		}
-		
+
 		internal_take_picture(name, delete, copy);
 		pthread_mutex_unlock(&lock);
 		return 1;
@@ -259,7 +273,7 @@ int tc_take_picture(const char * name, const bool delete, const bool copy) {
 
 int tc_take_n_pictures(const int n, const char * name, const char * postfix, const bool delete, const bool copy) {
 	pthread_mutex_lock(&lock);
-	
+
 	initCamaraAndContext();
 
 	if( initFailed ) {
@@ -273,13 +287,13 @@ int tc_take_n_pictures(const int n, const char * name, const char * postfix, con
 		else {
 			internal_set_setting("capturetarget", "Internal RAM");
 		}
-		
+
 		for(int i = 0; i < n; i++) {
 			char entryName[100];
 			snprintf(entryName, 100, "%s-%d.%s", name, i, postfix);
 			internal_take_picture(name, delete, copy);
 		}
-		
+
 		pthread_mutex_unlock(&lock);
 		return 1;
 	}
@@ -288,16 +302,16 @@ int tc_take_n_pictures(const int n, const char * name, const char * postfix, con
 int tc_preview(const char * name) {
 
 	pthread_mutex_lock(&lock);
-	
+
 	initCamaraAndContext();
-	
+
 	if( initFailed ) {
 		pthread_mutex_unlock(&lock);
 		return -1;
 	}
 	else {
 		CameraFile *file;
-		
+
 		int retval = gp_file_new(&file);
 		if (retval != GP_OK) {
 			fprintf(stderr,"gp_file_new: %d\n", retval);
@@ -332,7 +346,7 @@ bool tc_connected() {
 	pthread_mutex_lock(&lock);
 	// if we can init the camera we assume its connected.
 	initCamaraAndContext();
-	
+
 	if( initFailed ) {
 		pthread_mutex_unlock(&lock);
 		return false;
@@ -340,14 +354,14 @@ bool tc_connected() {
 	pthread_mutex_unlock(&lock);
 	return true;
 }
-	
+
 
 int tc_get_setting(const char * setting, char * result, size_t size_of) {
 
 	pthread_mutex_lock(&lock);
-	
+
 	initCamaraAndContext();
-	
+
 	if( initFailed ) {
 		pthread_mutex_unlock(&lock);
 		return -1;
@@ -385,7 +399,7 @@ int tc_get_setting(const char * setting, char * result, size_t size_of) {
 }
 
 int tc_set_setting(const char * setting, const char * value) {
-	
+
 	pthread_mutex_lock(&lock);
 	initCamaraAndContext();
 
@@ -420,20 +434,20 @@ int tc_settings(FILE * output) {
 			pthread_mutex_unlock(&lock);
 			return -1;
 		}
-		
+
 		// Helper function to print an entry out, needs to be passed the value as a string.
 		void printValue(CameraWidget * widget, const int depth, const char *name, const char * value) {
 			int choicesCount;
-			
+
 			fprintf(output, "\"%s\" : {\n", name);
 			indent(output, depth+1);
 			fprintf(output, "\"value\" : \"%s\",\n", value);
-			
+
 			const char * label;
 			gp_widget_get_label(widget, &label);
 			indent(output, depth+1);
 			fprintf(output, "\"label\" : \"%s\"", label);
-			
+
 			// If this setting has a fixed list of options we will return those as well.
 			// For instance iso can be one of "Auto","100","200","400","800","1600","3200","6400" on a Cannon 550D
 			choicesCount = gp_widget_count_choices(widget);
@@ -459,7 +473,7 @@ int tc_settings(FILE * output) {
 			indent(output, depth);
 			fprintf(output, "}");
 		}
-		
+
 		// internal tree walking function
 		int displayChildren(CameraWidget * widget, int depth, bool last) {
 			const char *name;
@@ -471,13 +485,13 @@ int tc_settings(FILE * output) {
 			}
 			CameraWidgetType type;
 			indent(output, depth);
-			
+
 			ret = gp_widget_get_type (widget, &type);
 			switch (type) {
 				case GP_WIDGET_WINDOW:
 				case GP_WIDGET_SECTION: // These are branch nodes.
 					fprintf(output, "\"%s\"", name);
-					
+
 					int count = gp_widget_count_children(widget);
 					if(count > 0) {
 						fprintf(output, " : {\n");
@@ -486,10 +500,10 @@ int tc_settings(FILE * output) {
 					for (int i = 0; i < count; i++) {
 						CameraWidget * child = NULL;
 						gp_widget_get_child(widget, i, &child);
-						
+
 						displayChildren(child, newDepth, (i == (count - 1)) );
 					}
-					
+
 					if(count > 0) {
 						indent(output, depth);
 						fprintf(output, "}");
@@ -500,35 +514,35 @@ int tc_settings(FILE * output) {
 				case GP_WIDGET_TEXT: // these are all easy text nodes
 					gp_widget_get_value(widget, &value);
 					printValue(widget, depth, name, (char *) value);
-				break;	
-				case GP_WIDGET_TOGGLE:	
+				break;
+				case GP_WIDGET_TOGGLE:
 				case GP_WIDGET_DATE: // with these the pointer returned is the value rather than a pointer.
 					gp_widget_get_value(widget, &value);
 					char str[15];
 					snprintf(str, 15, "%d", ((int)value));
-					
+
 					printValue(widget, depth, name, str);
 				break;
 			default:
 				fprintf(output, "\"%s\" : \"has bad type %d\"", name, type);
 			}
-			
+
 			// json output, no commas after the last object
 			if(!last) {
 				fprintf(output, ",");
 			}
 			fprintf(output, "\n");
-			
+
 			return 0;
 		}
-		
+
 		// the main bit of code for this function.
 		fprintf(output, "{\n");
 		ret = displayChildren(widget, 1, true);
 		fprintf(output, "}\n");
-		
+
 		fflush(output);
-		
+
 		gp_widget_free(widget);
 		pthread_mutex_unlock(&lock);
 		return ret;

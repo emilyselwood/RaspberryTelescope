@@ -8,10 +8,10 @@
 	<link href="jquery-ui/jquery-ui.css" rel="stylesheet" type="text/css" />
 	<script src="jquery-ui/jquery.js"></script>
 	<script src="jquery-ui/jquery-ui.js"></script>
-	
+
 	<script>
 		tickTime = new Date();
-	
+
 		function handleTLStatus(data) {
 			if(data.status == "processing") {
 				$("#timelapseStatus").text("Progress: " + data.current + " / " + data.number);
@@ -22,14 +22,14 @@
 				$("#timelapseCancelButton").hide();
 			}
 		}
-	
+
 		function updateImage() {
 			var image = document.getElementById("previewImage");
 			if(image.complete) {
 				image.src="/preview#" + new Date().getTime();
-				
+
 				var endTime = new Date();
-			
+
 				$("#tick").text ("" + (endTime.getTime() - tickTime.getTime()) + "ms");
 				tickTime = endTime;
 			}
@@ -37,7 +37,7 @@
 			setTimeout(updateImage, 500);
 
 		}
-		
+
 		function captureSingleClick() {
 			var returnValue = ""
 			if($("#immediatSetting").is(':checked')) {
@@ -54,7 +54,7 @@
 			if($("#deleteSetting").is(":checked")) {
 				deleteValue = "&d=1"
 			}
-			
+
 			var copyValue = "&c=0"
 			if($("#copySetting").is(":checked")) {
 				copyValue = "&c=1"
@@ -63,28 +63,28 @@
 			if(captureCountValue != "") {
 				captureCountValue = "&i=" + captureCountValue
 			}
-			
+
 			window.location.href = "/capture?" + returnValue + fileName + deleteValue + captureCountValue + copyValue;
 		}
-		
+
 		function captureTimeLapseClick() {
 			var fileName = $.trim($("#tlCaptureName").val())
 			if(fileName != "") {
 				fileName = "&n=" + fileName
 			}
-			
+
 			var nFrames = $.trim($("#tlCaptureCount").val())
 			if(nFrames != "") {
 				nFrames = "&i=" + nFrames
 			}
-			
+
 			var delay = $.trim($("#tlInterval").val())
 			if(delay != "") {
 				delay = "&t=" + delay
 			}
 			window.location.href = "/timelapse?" + fileName + nFrames + delay;
 		}
-		
+
 		function captureButtonClick() {
 			if($("#singleShotOptionsButton").is(":checked")) {
 				captureSingleClick();
@@ -93,12 +93,12 @@
 				captureTimeLapseClick();
 			}
 		}
-		
+
 		function shootingOptionsSetClick() {
 			// hide every thing then show the one we want.
 			$("#singleShotOptions").hide();
 			$("#timelapseOptions").hide();
-			
+
 			if($("#singleShotOptionsButton").is(":checked")) {
 				$("#singleShotOptions").show();
 			}
@@ -106,13 +106,13 @@
 				$("#timelapseOptions").show();
 			}
 		}
-		
+
 		function optionsButtonClick() {
 			// hide every thing then show the one we want.
 			$("#previewDiv").hide();
 			$("#captureOptions").hide();
 			$("#cameraOptions").hide();
-			
+
 			if($("#previewOptionsButton").is(":checked")) {
 				$("#previewDiv").show();
 			}
@@ -126,52 +126,71 @@
 				$("#previewDiv").show();
 			}
 		}
-		
+
 		function isoChange() {
 			var newValue = $("#isoSelect").find(":selected").text();
 			$.ajax("/setsetting?k=iso&v="+newValue);
 		}
-			
+
 		function shutterspeedChange() {
 			var newValue = $("#shutterSpeedSelect").find(":selected").text();
 			$.ajax("/setsetting?k=shutterspeed&v="+newValue);
 		}
-			
+
 		function apertureChange() {
 			var newValue = $("#apertureSelect").find(":selected").text();
 			$.ajax("/setsetting?k=aperture&v="+newValue);
 		}
-			
+
 		function whitebalanceChange() {
 			var newValue = $("#whiteBalanceSelect").find(":selected").text();
 			$.ajax("/setsetting?k=whitebalance&v="+newValue);
 		}
-		
+
+		function imageResultChange() {
+			var newValue = $("#imageResultSelect").find(":selected").text();
+			$.ajax("/setsetting?k=imageformat&v="+encodeURIComponent(newValue));
+		}
+
+		function imageResultSDChange() {
+			var newValue = $("#imageResultSDSelect").find(":selected").text();
+			$.ajax("/setsetting?k=imageformatsd&v="+encodeURIComponent(newValue));
+		}
+
+		function telescopeButtonClick(axis) {
+			$.ajax("/telescope?a=" + axis);
+		}
+
 		function populateSelect(name, choices, selected) {
 			$(name).empty();
 			$.each(choices, function(index, choiceValue) {
 				$(name).append($('<option>', { value : index })
 					.text(choiceValue));
 			});
-			
+
 			$(name + " option").filter(function() {
 				return $(this).text() == selected;
 			}).attr('selected', true);
 		}
-		
+
 		function handleJSONSettings(data) {
 			populateSelect('#isoSelect', data.main.imgsettings.iso.choices, data.main.imgsettings.iso.value);
 			populateSelect('#shutterSpeedSelect', data.main.capturesettings.shutterspeed.choices, data.main.capturesettings.shutterspeed.value);
 			populateSelect('#apertureSelect', data.main.capturesettings.aperture.choices, data.main.capturesettings.aperture.value);
 			populateSelect('#whiteBalanceSelect', data.main.imgsettings.whitebalance.choices, data.main.imgsettings.whitebalance.value);
-		
+			populateSelect('#imageResultSelect', data.main.imgsettings.imageformat.choices, data.main.imgsettings.imageformat.value);
+
 			$("#isoSelect").change(isoChange);
 			$("#shutterSpeedSelect").change(shutterspeedChange);
 			$("#apertureSelect").change(apertureChange);
 			$("#whiteBalanceSelect").change(whitebalanceChange);
+			$("#imageResultSelect").change(imageResultChange);
+
+			$("#batteryLabel").text(data.main.status.batterylevel.value);
+
 		}
-		
-		
+
+
 		function extractQueryParam(target) {
 			var values = window.location.search.substring(1).split('&');
 			for(i = 0; i < values.length; i++) {
@@ -189,23 +208,25 @@
 			}
 			return "";
 		}
-		
+
 		$(function() {
-		
+
 			$("#singleShotOptionsButton")
 				.button()
 				.click(shootingOptionsSetClick);
 			$("#timelapseOptionsButton")
 				.button()
 				.click(shootingOptionsSetClick);
+
 			$("#optionsButtonSet").buttonset();
-			
+			$("#directionButtonSet").buttonset();
+			$("#focusButtonSet").buttonset();
+
+
 			$("#singleShotOptions").show();
-			$("#timelapseOptions").hide();
-		
+
 			$( "#captureButton" )
-				.button()
-				.click(captureButtonClick);
+				.button();
 			$("#previewOptionsButton")
 				.button()
 				.click(optionsButtonClick);
@@ -215,17 +236,51 @@
 			$("#cameraOptionsButton")
 				.button()
 				.click(optionsButtonClick);
-				
+			$("#telescopeButton")
+				.button()
+				.click(optionsButtonClick);
+
+			$("#leftButtonClick")
+				.button()
+				.click(function() {
+					$.ajax("/telescope?a=1");
+				});
+			$("#upButtonClick")
+				.button()
+				.click(function() {
+					$.ajax("/telescope?a=2");
+				});
+			$("#downButtonClick")
+				.button()
+				.click(function() {
+					$.ajax("/telescope?a=3");
+				});
+			$("#rightButtonClick")
+				.button()
+				.click(function() {
+					$.ajax("/telescope?a=4");
+				});
+			$("#inButtonClick")
+				.button()
+				.click(function() {
+					$.ajax("/telescope?a=5");
+				});
+			$("#outButtonClick")
+				.button()
+				.click(function() {
+					$.ajax("/telescope?a=6");
+				});
+
 			$("#shootingOptionsSet").buttonset();
-			
-			$("#galleryLink").button();
+
 			$("#previewDiv").show();
 			$("#captureOptions").hide();
 			$("#cameraOptions").hide();
-			
+			$("#telescopeOptions").hide();
+
 			$("#timelapseCancelButton").button();
 			$("#timelapseCancelButton").hide();
-			
+
 			// set up any default values that are needed.
 			if(extractQueryParam("r") == 1) {
 				$("#immediatSetting").prop("checked", true);
@@ -236,47 +291,58 @@
 			if(extractQueryParam("c") == 1) {
 				$("#copySetting").prop("checked", true);
 			}
-			
+
 			var name = extractQueryParam("n");
 			$("#captureName").val(name);
 			$("#tlCaptureName").val(name);
-			
+
 			var count = extractQueryParam("i");
 			$("#captureCount").val(count);
 			$("#tlCaptureCount").val(count);
-			
+
 			$("#tlInterval").val(extractQueryParam("t"));
-			
-			
+
+
 			setTimeout(updateImage, 1000);
-			
+
 			$.getJSON("/settings", handleJSONSettings);
 		});
-	
+
 	</script>
 </head>
 <body>
 	<div class="menu">
-		<button id="captureButton" onclick="captureButtonClick" >Capture</button>
+		<button id="captureButton" onclick="captureButtonClick();" >Capture</button>
 
 		<input type="radio" name="optionsButtonSet" id="previewOptionsButton" checked="checked" /><label for="previewOptionsButton">Preview</label>
 		Settings:<span id="optionsButtonSet">
 			<input type="radio" name="optionsButtonSet" id="captureOptionsButton" /><label for="captureOptionsButton">Capture</label>
 			<input type="radio" name="optionsButtonSet" id="cameraOptionsButton" /><label for="cameraOptionsButton">Camera</label>
 		</span>
-		<a id="galleryLink" href="gallery.lp">Gallery</a>
 		<span id="timelapseStatus"></span>
 		<a id="timelapseCancelButton" href="/tlcancel">Cancel</a>
-		<span id="tick">-50</span>
-		
+		Battry: <span id="batteryLabel">100%</span>
+		Framerate: <span id="tick">-50</span>
+
+
 	</div>
 	<div id="previewDiv">
-		<img id="previewImage" src="/preview" />
+		<img id="previewImage" src="/preview" /><br />
+		Move:<span id="directionButtonSet">
+			<button onclick="telescopeButtonClick(28);" id="leftButton">Left</button>
+			<button onclick="telescopeButtonClick(30);" id="upButton" >Up</button>
+			<button onclick="telescopeButtonClick(31);" id="downButton" >Down</button>
+			<button onclick="telescopeButtonClick(29);" id="rightButton" >Right</button>
+		</span>
+		Focus:<span id="focusButtonSet">
+			<button onclick="telescopeButtonClick(117);" id="inButton" >In</button>
+			<button onclick="telescopeButtonClick(105);" id="outButton" >Out</button>
+		</span>
 	</div>
 	<div id="captureOptions" class="optionsTab">
 		<div class="setting">
 			<span id="shootingOptionsSet">
-				<input type="radio" name="shootingOptionsSet" id="singleShotOptionsButton" /><label for="singleShotOptionsButton">Single</label>
+				<input type="radio" name="shootingOptionsSet" id="singleShotOptionsButton" checked="checked" /><label for="singleShotOptionsButton">Single</label>
 				<input type="radio" name="shootingOptionsSet" id="timelapseOptionsButton" /><label for="timelapseOptionsButton">Timelapse</label>
 			</span>
 		</div>
@@ -291,7 +357,7 @@
 			</div>
 			<div class="setting">
 				<label for="copySetting">Copy from camera</label>
-				<input type="checkbox" id="copySetting"/>
+				<input type="checkbox" id="copySetting" checked="checked" />
 			</div>
 			<div class="setting">
 				<label for="captureName">File Name:</label>
@@ -337,6 +403,10 @@
 		<div class="setting">
 			<label for="whiteBalanceSelect">White Balance</label>
 			<select id="whiteBalanceSelect"></select>
+		</div>
+		<div class="setting">
+			<label for="imageResultSelect">Result type</label>
+			<select id="imageResultSelect"></select>
 		</div>
 	</div>
 </body>
